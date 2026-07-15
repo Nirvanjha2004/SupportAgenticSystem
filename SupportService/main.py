@@ -1,3 +1,4 @@
+# main.py
 import os
 from contextlib import asynccontextmanager
 from typing import List, Optional
@@ -13,6 +14,11 @@ from api.routes import connectors, webhooks
 from vectorstore.store import VectorStore
 from rag.chain import build_rag_chain, build_structured_rag_chain, stream_rag_answer
 from rag.models import CitedAnswer
+
+# ─── CRITICAL: Import connectors to trigger self-registration ─────────
+import ingestion.connectors.slack      # noqa: F401
+import ingestion.connectors.google_docs  # noqa: F401
+import ingestion.connectors.notion       # noqa: F401
 
 
 # ─── Lifespan: init shared resources ─────────────────────────────────

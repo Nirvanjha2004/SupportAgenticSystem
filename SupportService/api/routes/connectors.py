@@ -1,5 +1,6 @@
 from fastapi import APIRouter, HTTPException
 import secrets
+import requests
 from ingestion.connectors.slack.oauth import SlackOAuth
 from ingestion.connectors.google_docs.oauth import GoogleDocsOAuth
 from ingestion.connectors.notion.oauth import NotionOAuth
@@ -52,12 +53,26 @@ async def google_docs_callback(code: str, state: str):
     except Exception as e:
         raise HTTPException(status_code=400, detail=str(e))
 
-    # Google doesn't return workspace_id in the same way; we use a placeholder or extract from token
-    workspace_id = credentials.get("scope", "google-workspace")  # Or call tokeninfo if needed
+    # Fetch user info to get a real workspace identifier
+    access_token = credentials.get("access_token")
+    try:
+        user_resp = requests.get(
+            "https://www.googleapis.com/oauth2/v2/userinfo",
+            headers={"Authorization": f"Bearer {access_token}"}
+        )
+        user_resp.raise_for_status()
+        user_info = user_resp.json()
+        workspace_id = user_info.get("email", "unknown-google-user")
+        user_email = user_info.get("email")
+    except Exception as e:
+        # Fallback if userinfo fails
+        workspace_id = credentials.get("refresh_token", "unknown")[:20]
+        user_email = None
+
     store.save("google_docs", workspace_id, credentials)
     queue.enqueue_backfill("google_docs", workspace_id)
 
-    return {"status": "connected", "workspace_id": workspace_id}
+    return {"status": "connected", "workspace_id": workspace_id, "email": user_email}
 
 
 # ─── Notion ──────────────────────────────────────────────────────────

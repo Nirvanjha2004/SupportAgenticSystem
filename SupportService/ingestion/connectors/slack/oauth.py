@@ -3,6 +3,7 @@ from urllib.parse import urlencode
 import requests
 from config import settings
 
+
 class SlackOAuth:
     def __init__(self):
         self.client_id = settings.SLACK_CLIENT_ID
@@ -42,12 +43,18 @@ class SlackOAuth:
         data = resp.json()
         if not data.get("ok"):
             raise Exception(f"Slack OAuth error: {data.get('error')}")
+
+        # CRITICAL FIX: use (x or {}) instead of .get(x, {}) because Slack may send null
+        team = data.get("team") or {}
+        enterprise = data.get("enterprise") or {}
+        authed_user = data.get("authed_user") or {}
+
         return {
             "access_token": data.get("access_token"),
-            "team_id": data.get("team", {}).get("id"),
-            "team_name": data.get("team", {}).get("name"),
-            "enterprise_id": data.get("enterprise", {}).get("id"),
-            "authed_user": data.get("authed_user", {}),
+            "team_id": team.get("id"),
+            "team_name": team.get("name"),
+            "enterprise_id": enterprise.get("id"),
+            "authed_user": authed_user,
             "bot_user_id": data.get("bot_user_id"),
             "scope": data.get("scope")
         }

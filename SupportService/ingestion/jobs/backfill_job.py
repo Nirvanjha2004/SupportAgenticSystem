@@ -3,12 +3,19 @@ import logging
 import sys
 import traceback
 
+# CRITICAL: Import connectors to trigger self-registration before anything else
+import ingestion.connectors.slack      # noqa: F401
+import ingestion.connectors.google_docs  # noqa: F401
+import ingestion.connectors.notion       # noqa: F401
+
 from ingestion.jobs.queue import JobQueue
 from ingestion.registry import get_connector
 from ingestion.storage.credentials import CredentialStore
 from ingestion.chunking import thread_aware_chunk
 from vectorstore.store import VectorStore
 from config import settings
+
+# ... rest of the file stays exactly the same
 
 # ─── Logging setup ─────────────────────────────────────────────────
 logging.basicConfig(

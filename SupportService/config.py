@@ -14,6 +14,16 @@ class Settings(BaseSettings):
     JINA_API_KEY : str
     GROQ_API_KEY : str
     CHROMA_PERSIST_DIR : str
+    
+    GOOGLE_CLIENT_ID: str
+    GOOGLE_CLIENT_SECRET: str
+    GOOGLE_REDIRECT_URI: str = "http://localhost:8000/connectors/google_docs/callback"
+
+    # Notion
+    NOTION_CLIENT_ID: str
+    NOTION_CLIENT_SECRET: str
+    NOTION_REDIRECT_URI: str = "http://localhost:8000/connectors/notion/callback"
+
 
     class Config:
         env_file = ".env"
