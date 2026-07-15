@@ -1,0 +1,29 @@
+# Python-generated files
+__pycache__/
+*.py[oc]
+*.pyd
+build/
+dist/
+wheels/
+*.egg-info/
+
+# Virtual environments
+.venv/
+venv/
+
+# Tool caches
+.ruff_cache/
+.mypy_cache/
+.pytest_cache/
+.coverage
+.coverage.*
+
+# Local environment and OS files
+.python-version
+.env
+.env.*
+.DS_Store
+Thumbs.db
+
+# App-generated storage
+SupportService/chroma_db/
