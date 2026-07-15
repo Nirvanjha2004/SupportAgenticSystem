@@ -1,0 +1,13 @@
+﻿@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  body {
+    @apply bg-ink text-text-primary font-body antialiased;
+  }
+  ::selection {
+    background: rgba(108, 99, 255, 0.1);
+    color: #E9ECF4;
+  }
+}
