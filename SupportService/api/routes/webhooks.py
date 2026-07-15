@@ -6,11 +6,14 @@ from config import settings
 router = APIRouter()
 queue = JobQueue()
 
+
+# ─── Slack ───────────────────────────────────────────────────────────
+
 @router.post("/webhooks/slack/events")
 async def slack_events(
     request: Request,
     x_slack_signature: str = Header(None),
-    x_slack_request_timestamp: str = Header(None)
+    x_slack_request_timestamp: str = Header(None),
 ):
     body = await request.body()
     payload = await request.json()
@@ -18,7 +21,6 @@ async def slack_events(
     if payload.get("type") == "url_verification":
         return {"challenge": payload.get("challenge")}
 
-    # Verify signature
     if settings.SLACK_SIGNING_SECRET:
         connector = SlackConnector()
         connector.set_webhook_secret(settings.SLACK_SIGNING_SECRET)
@@ -31,7 +33,19 @@ async def slack_events(
     queue.enqueue_incremental("slack", workspace_id, payload)
     return {"status": "ok"}
 
+
+# ─── Notion ──────────────────────────────────────────────────────────
+
 @router.post("/webhooks/notion/events")
 async def notion_events(request: Request):
-    # Placeholder for future Notion implementation
+    payload = await request.json()
+    # Notion webhooks are newer; verify signature if available
+    workspace_id = payload.get("workspace_id", "unknown")
+    queue.enqueue_incremental("notion", workspace_id, payload)
     return {"status": "ok"}
+
+
+# ─── Google Docs ─────────────────────────────────────────────────────
+# Google Drive push notifications use a different mechanism (Pub/Sub or HTTPS)
+# and are usually configured via the Google Cloud Console, not a simple webhook endpoint.
+# You'd verify the X-Goog-Resource-State header and enqueue accordingly.
