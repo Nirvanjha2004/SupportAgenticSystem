@@ -4,6 +4,10 @@ from typing import List
 from langchain_core.embeddings import Embeddings
 from langchain_chroma import Chroma
 from langchain_groq import ChatGroq
+from langchain_core.prompts import ChatPromptTemplate
+from langchain_core.output_parsers import StrOutputParser
+from langchain_core.runnables import RunnablePassthrough
+
 
 class JinaEmbeddings(Embeddings):
     """Minimal LangChain-compatible wrapper for Jina AI embeddings API."""
@@ -12,10 +16,10 @@ class JinaEmbeddings(Embeddings):
         self,
         model: str = "jina-embeddings-v4",
         api_key: str | None = None,
-        task: str = "retrieval.passage",  # use "retrieval.query" for queries
+        task: str = "retrieval.passage",
     ):
         self.model = model
-        self.api_key = 'jina_8ad270a2482c499ba6484c0ce28d37d2xbEYWQIIXXYyp2bh3uxKC1i81-pG'
+        self.api_key = api_key or os.environ["JINA_API_KEY"]
         self.task = task
         self.url = "https://api.jina.ai/v1/embeddings"
 
@@ -32,7 +36,6 @@ class JinaEmbeddings(Embeddings):
         response = requests.post(self.url, headers=headers, json=payload)
         response.raise_for_status()
         data = response.json()["data"]
-        # API may not preserve order, so sort by index if present
         data = sorted(data, key=lambda d: d.get("index", 0))
         return [d["embedding"] for d in data]
 
@@ -43,7 +46,7 @@ class JinaEmbeddings(Embeddings):
         return self._embed([text], task="retrieval.query")[0]
 
 
-# --- Usage ---
+# --- Data ---
 
 texts = [
     "LangChain is an open-source framework for building applications powered by large language models.",
@@ -58,8 +61,12 @@ texts = [
     "Retrieval-Augmented Generation combines vector search with language models to answer questions using external knowledge.",
 ]
 
-groqChat = ChatGroq(
-    
+# --- Setup ---
+
+llm = ChatGroq(
+    model="llama-3.3-70b-versatile",
+    api_key=os.environ["GROQ_API_KEY"],
+    temperature=0,
 )
 
 embeddings = JinaEmbeddings(model="jina-embeddings-v4")
@@ -67,16 +74,42 @@ embeddings = JinaEmbeddings(model="jina-embeddings-v4")
 vector_store = Chroma(
     collection_name="test",
     embedding_function=embeddings,
-    persist_directory="./chroma_db"
+    persist_directory="./chroma_db",
 )
 
-vector_store.add_texts(texts)
-retriever = vector_store.as_retriever()
+# Avoid re-adding texts every run once persisted
+if vector_store._collection.count() == 0:
+    vector_store.add_texts(texts)
+
+retriever = vector_store.as_retriever(search_kwargs={"k": 3})
+
+prompt = ChatPromptTemplate.from_messages([
+    ("system", "You are a helpful assistant. Answer the question using ONLY the provided context. "
+               "If the context doesn't contain the answer, say you don't know — don't make things up.\n\n"
+               "Context:\n{context}"),
+    ("human", "{question}"),
+])
 
 
-def get_results():
-    ans = retriever.invoke("What is Langchain ?")
-    print(ans)
+def format_docs(docs):
+    return "\n\n".join(doc.page_content for doc in docs)
 
 
-get_results()
+# --- RAG chain ---
+
+rag_chain = (
+    {"context": retriever | format_docs, "question": RunnablePassthrough()}
+    | prompt
+    | llm
+    | StrOutputParser()
+)
+
+
+def get_results(query: str):
+    answer = rag_chain.invoke(query)
+    print(answer)
+    return answer
+
+
+if __name__ == "__main__":
+    get_results("What is Langchain ?")
