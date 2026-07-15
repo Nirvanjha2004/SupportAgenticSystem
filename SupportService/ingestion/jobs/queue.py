@@ -5,9 +5,17 @@ from typing import Optional, Dict, Any
 import redis
 from config import settings
 
+
 class JobQueue:
     def __init__(self):
-        self.redis = redis.from_url(settings.REDIS_URL)
+        # socket_timeout=None prevents BRPOP from crashing on Windows
+        self.redis = redis.from_url(
+            settings.REDIS_URL,
+            socket_timeout=None,        # Allow blocking forever (BRPOP needs this)
+            socket_connect_timeout=5,   # But fail fast if Redis is down
+            health_check_interval=30,   # Keep idle connections alive
+            decode_responses=False,     # We decode bytes ourselves
+        )
         self.backfill_q = "queue:backfill"
         self.incremental_q = "queue:incremental"
 
@@ -36,9 +44,17 @@ class JobQueue:
         return job_id
 
     def dequeue_backfill(self, timeout: int = 5) -> Optional[Dict[str, Any]]:
+        # BRPOP returns (b'queue:backfill', b'job_json') or None on timeout
         result = self.redis.brpop(self.backfill_q, timeout=timeout)
-        return json.loads(result[1]) if result else None
+        if result is None:
+            return None
+        # result is a tuple: (queue_name, job_bytes)
+        _, job_bytes = result
+        return json.loads(job_bytes)
 
     def dequeue_incremental(self, timeout: int = 5) -> Optional[Dict[str, Any]]:
         result = self.redis.brpop(self.incremental_q, timeout=timeout)
-        return json.loads(result[1]) if result else None
+        if result is None:
+            return None
+        _, job_bytes = result
+        return json.loads(job_bytes)

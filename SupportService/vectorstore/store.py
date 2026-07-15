@@ -1,7 +1,7 @@
 from typing import List, Optional, Tuple
 from langchain_chroma import Chroma
 from langchain_core.documents import Document
-from config import CHROMA_PERSIST_DIR
+from config import settings
 from embeddings.jina import JinaEmbeddings
 from ingestion.models import RawDocument
 
@@ -12,7 +12,7 @@ class VectorStore:
         self.store = Chroma(
             collection_name=collection_name,
             embedding_function=self.embeddings,
-            persist_directory=CHROMA_PERSIST_DIR,
+            persist_directory=settings.CHROMA_PERSIST_DIR,
         )
 
     def _sanitize_metadata(self, metadata: dict) -> dict:

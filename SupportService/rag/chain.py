@@ -9,7 +9,7 @@ from langchain_core.runnables import (
 )
 from langchain_core.documents import Document
 from langchain_core.messages import BaseMessage
-from config import GROQ_API_KEY
+from config import settings
 from rag.prompts import RAG_PROMPT, CONDENSE_QUESTION_PROMPT, FALLBACK_PROMPT
 from rag.models import CitedAnswer
 from vectorstore.store import VectorStore
@@ -62,7 +62,7 @@ def _has_relevant_docs(inputs: Dict[str, Any]) -> bool:
 
 def build_condense_chain():
     """Turns follow-up questions into standalone queries using history."""
-    llm = ChatGroq(model="llama-3.3-70b-versatile", api_key=GROQ_API_KEY, temperature=0)
+    llm = ChatGroq(model="llama-3.3-70b-versatile", api_key=settings.GROQ_API_KEY, temperature=0)
     return CONDENSE_QUESTION_PROMPT | llm | StrOutputParser()
 
 
@@ -82,7 +82,7 @@ def build_rag_chain(
     """
     llm = ChatGroq(
         model="llama-3.3-70b-versatile",
-        api_key=GROQ_API_KEY,
+        api_key=settings.GROQ_API_KEY,
         temperature=0,
         streaming=stream
     )
@@ -135,7 +135,7 @@ def build_structured_rag_chain(vectorstore: VectorStore):
     """
     llm = ChatGroq(
         model="llama-3.3-70b-versatile",
-        api_key=GROQ_API_KEY,
+        api_key=settings.GROQ_API_KEY,
         temperature=0
     ).with_structured_output(CitedAnswer)
     

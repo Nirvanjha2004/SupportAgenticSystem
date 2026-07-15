@@ -11,9 +11,9 @@ class Settings(BaseSettings):
     SLACK_CLIENT_SECRET: str
     SLACK_REDIRECT_URI: str = "http://localhost:8000/connectors/slack/callback"
     SLACK_SIGNING_SECRET: str = ""  # From Slack app "Basic Info"
-    JINA_API_KEY = os.environ["JINA_API_KEY"]
-    GROQ_API_KEY = os.environ["GROQ_API_KEY"]
-    CHROMA_PERSIST_DIR = "./chroma_db"
+    JINA_API_KEY : str
+    GROQ_API_KEY : str
+    CHROMA_PERSIST_DIR : str
 
     class Config:
         env_file = ".env"

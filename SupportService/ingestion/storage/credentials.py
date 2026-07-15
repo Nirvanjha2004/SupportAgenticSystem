@@ -3,9 +3,16 @@ import json
 import redis
 from cryptography.fernet import Fernet
 
+
 class CredentialStore:
     def __init__(self, redis_url: str, encryption_key: str):
-        self.redis = redis.from_url(redis_url)
+        self.redis = redis.from_url(
+            redis_url,
+            socket_timeout=5,
+            socket_connect_timeout=5,
+            health_check_interval=30,
+            decode_responses=False,
+        )
         self.cipher = Fernet(encryption_key.encode() if isinstance(encryption_key, str) else encryption_key)
 
     def _key(self, source_type: str, workspace_id: str) -> str:
