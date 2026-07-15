@@ -1,26 +1,22 @@
 from abc import ABC, abstractmethod
-from typing import List
+from typing import List, Optional, Dict, Any
 from ingestion.models import RawDocument
 
 class BaseConnector(ABC):
-    source_type: str  # "slack", "google_docs", "notion"
+    source_type: str
 
     @abstractmethod
     def get_oauth_url(self, state: str) -> str:
-        """Return the URL user is redirected to for authorization."""
         ...
 
     @abstractmethod
-    def handle_oauth_callback(self, code: str) -> dict:
-        """Exchange code for token, return credentials to persist."""
+    def handle_oauth_callback(self, code: str) -> Dict[str, Any]:
         ...
 
     @abstractmethod
-    def backfill(self, credentials: dict, workspace_id: str) -> List[RawDocument]:
-        """Pull historical data on first connect."""
+    def backfill(self, credentials: Dict[str, Any], workspace_id: str) -> List[RawDocument]:
         ...
 
     @abstractmethod
-    def parse_event(self, payload: dict) -> RawDocument | None:
-        """Convert a real-time webhook/event payload into a RawDocument."""
+    def ingest_event(self, payload: Dict[str, Any]) -> Optional[RawDocument]:
         ...

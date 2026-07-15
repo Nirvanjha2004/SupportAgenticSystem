@@ -1,10 +1,20 @@
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 from datetime import datetime
+from typing import Optional, Dict, Any
+from enum import Enum
+
+class SourceType(str, Enum):
+    SLACK = "slack"
+    NOTION = "notion"
+    GOOGLE_DOCS = "google_docs"
 
 class RawDocument(BaseModel):
-    source_type: str        # "slack", "notion", "google_docs"
+    id: str
+    source_type: SourceType
     workspace_id: str
-    external_id: str        # slack message ts, notion block id, gdoc id
+    title: Optional[str] = None
     content: str
-    metadata: dict          # channel_id, author, url, doc_title, etc.
-    created_at: datetime
+    metadata: Dict[str, Any] = Field(default_factory=dict)
+    created_at: Optional[datetime] = None
+    updated_at: Optional[datetime] = None
+    chunk_index: Optional[int] = None
