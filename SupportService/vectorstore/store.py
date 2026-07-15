@@ -1,4 +1,4 @@
-from typing import List, Optional
+from typing import List, Optional, Tuple
 from langchain_chroma import Chroma
 from langchain_core.documents import Document
 from config import CHROMA_PERSIST_DIR
@@ -16,10 +16,7 @@ class VectorStore:
         )
 
     def _sanitize_metadata(self, metadata: dict) -> dict:
-        """
-        Chroma only accepts scalar values: str, int, float, bool.
-        Flatten nested dicts with dot-notation and stringify everything else.
-        """
+        """Chroma only accepts scalar values."""
         clean = {}
         for k, v in metadata.items():
             if v is None:
@@ -48,19 +45,14 @@ class VectorStore:
             "created_at": doc.created_at.isoformat() if doc.created_at else "",
             "updated_at": doc.updated_at.isoformat() if doc.updated_at else "",
         }
-        # Merge RawDocument.metadata without overwriting base keys
         meta.update(self._sanitize_metadata(doc.metadata))
         return Document(page_content=doc.content, metadata=meta)
 
     def upsert(self, documents: List[RawDocument]) -> int:
-        """Insert or update documents by ID. Returns number of chunks indexed."""
         if not documents:
             return 0
-
         docs = [self._to_lc_document(d) for d in documents]
         ids = [d.id for d in documents]
-
-        # Use native Chroma upsert for idempotent writes (update if exists, insert if new)
         self.store._collection.upsert(
             ids=ids,
             documents=[d.page_content for d in docs],
@@ -68,27 +60,31 @@ class VectorStore:
         )
         return len(documents)
 
-    def search(
-        self,
-        query: str,
-        workspace_id: Optional[str] = None,
-        k: int = 5,
-        filter_dict: Optional[dict] = None,
-    ) -> List[Document]:
-        """Similarity search with optional workspace filtering."""
+    def search(self, query: str, k: int = 5, filter_dict: Optional[dict] = None) -> List[Document]:
         final_filter = filter_dict or {}
-        if workspace_id:
-            final_filter["workspace_id"] = workspace_id
-        return self.store.similarity_search(
-            query, k=k, filter=final_filter if final_filter else None
+        return self.store.similarity_search(query, k=k, filter=final_filter if final_filter else None)
+
+    def search_with_relevance(
+        self, 
+        query: str, 
+        k: int = 5, 
+        threshold: float = 0.3,
+        filter_dict: Optional[dict] = None
+    ) -> List[Document]:
+        """
+        Returns docs with cosine distance <= threshold.
+        Chroma uses cosine distance (0 = identical, 2 = opposite), so threshold
+        of 0.3 ≈ 0.85 cosine similarity.
+        """
+        results: List[Tuple[Document, float]] = self.store.similarity_search_with_score(
+            query, k=k, filter=filter_dict or None
         )
+        return [doc for doc, score in results if score <= threshold]
 
     def delete_by_workspace(self, workspace_id: str) -> None:
-        """Wipe all chunks for a workspace (useful before full re-backfill)."""
         self.store._collection.delete(where={"workspace_id": workspace_id})
 
     def delete_by_source(self, source_type: str, workspace_id: str) -> None:
-        """Wipe chunks for a specific source + workspace combo."""
         self.store._collection.delete(
             where={"source_type": source_type, "workspace_id": workspace_id}
         )
