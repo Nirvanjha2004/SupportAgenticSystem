@@ -1,10 +1,10 @@
-﻿import { Outlet } from 'react-router-dom'
+import { Outlet } from 'react-router-dom'
 import Sidebar from './Sidebar'
 import TopBar from './TopBar'
 
 export default function AppShell() {
   return (
-    <div className="flex h-screen w-full bg-ink">
+    <div className="flex h-screen w-full bg-[#F5F1E8]">
       <Sidebar />
       <div className="flex flex-1 flex-col min-w-0">
         <TopBar />

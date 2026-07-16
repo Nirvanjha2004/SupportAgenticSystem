@@ -1,8 +1,10 @@
-﻿import { useParams } from 'react-router-dom'
+import { Link, useParams } from 'react-router-dom'
+import { motion } from 'framer-motion'
 import { useConnectors } from '../../hooks/useConnectors'
 import { useIngestionStatus } from '../../hooks/useIngestionStatus'
 import ConduitPipeline from '../../components/conduit/ConduitPipeline'
 import SyncLogTable from '../../components/sources/SyncLogTable'
+import { ArrowLeft } from 'lucide-react'
 
 export default function SourceDetailPage() {
   const { type } = useParams<{ type: string }>()
@@ -23,34 +25,47 @@ export default function SourceDetailPage() {
     { time: '14:33:01', message: 'Embedding batch 12/40', status: 'ok' as const },
   ]
 
-  if (!conn) return <div className="text-text-muted">Source not found</div>
+  if (!conn) return <div className="text-[#8A857D]">Source not found</div>
 
   return (
-    <div className="max-w-3xl space-y-6">
+    <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="max-w-3xl space-y-6">
+      {/* Header */}
+      <div>
+        <Link to="/sources" className="group inline-flex items-center gap-1.5 text-xs font-mono text-[#8A857D] transition-colors hover:text-[#5E6B3F]">
+          <ArrowLeft className="h-3.5 w-3.5 transition-transform group-hover:-translate-x-0.5" />
+          Back to sources
+        </Link>
+      </div>
+
       <div className="flex items-center justify-between">
         <div>
-          <h2 className="font-display text-xl font-semibold text-text-primary">{conn.name}</h2>
-          <p className="mt-1 text-xs font-mono text-text-muted">Last synced: {conn.lastSynced || 'Never'}</p>
+          <span className="font-mono text-[9px] font-medium uppercase tracking-[0.15em] text-[#8A857D]">
+            {conn.type}
+          </span>
+          <h2 className="mt-1 font-display text-2xl font-semibold text-[#2B2A26]">{conn.name}</h2>
+          <p className="mt-1 font-mono text-xs text-[#8A857D]">Last synced: {conn.lastSynced || 'Never'}</p>
         </div>
         <div className="flex items-center gap-2">
-          <button className="rounded-btn border border-line px-3 py-2 text-xs font-medium text-text-primary hover:bg-surface-raised">
+          <button className="rounded-btn border border-[#DDD5C8] bg-[#FBF9F5] px-3 py-2 text-xs font-medium text-[#2B2A26] transition-colors hover:bg-[#EEE7DA]">
             Sync now
           </button>
-          <button className="rounded-btn border border-signal-red px-3 py-2 text-xs font-medium text-signal-red hover:bg-signal-red/10">
+          <button className="rounded-btn border border-[#A84F3A]/50 bg-[#FBF9F5] px-3 py-2 text-xs font-medium text-[#A84F3A] transition-colors hover:bg-[#A84F3A]/5">
             Disconnect
           </button>
         </div>
       </div>
 
-      <div className="rounded-card border border-line bg-surface p-6">
-        <h3 className="text-sm font-medium text-text-primary">Ingestion pipeline</h3>
+      {/* Pipeline */}
+      <div className="card-sand p-6">
+        <h3 className="text-sm font-medium text-[#2B2A26]">Ingestion pipeline</h3>
         <ConduitPipeline activeStage={activeStage} />
       </div>
 
+      {/* Sync log */}
       <div>
-        <h3 className="mb-3 text-sm font-medium text-text-primary">Sync log</h3>
+        <h3 className="mb-3 text-sm font-medium text-[#2B2A26]">Sync log</h3>
         <SyncLogTable logs={logs} />
       </div>
-    </div>
+    </motion.div>
   )
 }
