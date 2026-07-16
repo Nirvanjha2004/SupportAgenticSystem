@@ -48,6 +48,12 @@ export default {
         linen: '#D4C9B8',
         stone: '#B8B0A0',
         wood: '#8B7355',
+        // Enhanced gradients
+        gradient: {
+          warm: 'linear-gradient(135deg, #FBF9F5 0%, #F5F1E8 100%)',
+          olive: 'linear-gradient(135deg, #5E6B3F 0%, #49552F 100%)',
+          glow: 'linear-gradient(135deg, rgba(94, 107, 63, 0.1) 0%, rgba(220, 203, 154, 0.1) 100%)',
+        }
       },
       fontFamily: {
         display: ['Manrope', 'system-ui', 'sans-serif'],
@@ -64,6 +70,7 @@ export default {
         'hero-xl': ['6.5rem', { lineHeight: '0.95', letterSpacing: '-0.02em' }],
         'heading': ['2.5rem', { lineHeight: '1.1', letterSpacing: '-0.01em' }],
         'heading-md': ['3rem', { lineHeight: '1.08', letterSpacing: '-0.01em' }],
+        'heading-lg': ['3.5rem', { lineHeight: '1.05', letterSpacing: '-0.01em' }],
       },
       borderRadius: {
         card: '16px',
@@ -71,6 +78,7 @@ export default {
         chip: '8px',
         lg: '20px',
         xl: '24px',
+        '2xl': '32px',
       },
       spacing: {
         '18': '4.5rem',
@@ -79,6 +87,8 @@ export default {
         '30': '7.5rem',
         '34': '8.5rem',
         '38': '9.5rem',
+        '42': '10.5rem',
+        '46': '11.5rem',
       },
       boxShadow: {
         'soft': '0 1px 2px rgba(43, 42, 38, 0.06), 0 1px 4px rgba(43, 42, 38, 0.04)',
@@ -87,6 +97,7 @@ export default {
         'elevated': '0 8px 32px rgba(43, 42, 38, 0.1), 0 2px 8px rgba(43, 42, 38, 0.05)',
         'button': '0 1px 2px rgba(43, 42, 38, 0.06)',
         'button-hover': '0 2px 8px rgba(43, 42, 38, 0.1)',
+        'glow': '0 0 40px rgba(94, 107, 63, 0.15)',
       },
       animation: {
         'fade-in': 'fadeIn 0.8s ease-out forwards',
@@ -99,6 +110,8 @@ export default {
         'shimmer': 'shimmer 3s ease-in-out infinite',
         'blur-in': 'blurIn 0.8s cubic-bezier(0.16, 1, 0.3, 1) forwards',
         'scale-in': 'scaleIn 0.6s cubic-bezier(0.16, 1, 0.3, 1) forwards',
+        'pulse-soft': 'pulseSoft 3s ease-in-out infinite',
+        'bounce-subtle': 'bounceSubtle 2s ease-in-out infinite',
       },
       keyframes: {
         fadeIn: {
@@ -134,6 +147,14 @@ export default {
         scaleIn: {
           '0%': { opacity: '0', transform: 'scale(0.95)' },
           '100%': { opacity: '1', transform: 'scale(1)' },
+        },
+        pulseSoft: {
+          '0%, 100%': { opacity: '1' },
+          '50%': { opacity: '0.7' },
+        },
+        bounceSubtle: {
+          '0%, 100%': { transform: 'translateY(0px)' },
+          '50%': { transform: 'translateY(-4px)' },
         },
       },
       transitionTimingFunction: {
