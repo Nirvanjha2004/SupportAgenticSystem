@@ -1,24 +1,25 @@
 import { useState, useEffect } from 'react'
-import { useNavigate, Link, Navigate } from 'react-router-dom'
+import { useNavigate, Link } from 'react-router-dom'
 import { motion, AnimatePresence } from 'framer-motion'
-import { MessageSquare, FileSpreadsheet, FileText, ArrowRight, Check } from 'lucide-react'
+import { MessageSquare, FileSpreadsheet, FileText, ArrowRight, Check, Loader2 } from 'lucide-react'
 import { useAppStore } from '../../store/useAppStore'
+import { useConnectors, type ConnectorStatus } from '../../hooks/useConnectors'
 
 const CONNECTORS = [
   {
-    type: 'slack',
+    type: 'slack' as const,
     name: 'Slack',
     description: 'Messages, threads, and channels',
     icon: MessageSquare,
   },
   {
-    type: 'google_docs',
+    type: 'google_docs' as const,
     name: 'Google Docs',
     description: 'Docs, sheets, and Drive files',
     icon: FileSpreadsheet,
   },
   {
-    type: 'notion',
+    type: 'notion' as const,
     name: 'Notion',
     description: 'Pages, databases, and wikis',
     icon: FileText,
@@ -94,14 +95,87 @@ function StepIndicator({ step }: { step: 1 | 2 }) {
   )
 }
 
+function ConnectorCard({ connector, status, onClick, disabled }: {
+  connector: typeof CONNECTORS[number],
+  status: ConnectorStatus | undefined,
+  onClick: () => void,
+  disabled: boolean
+}) {
+  const isConnected = status?.connected
+  const isSyncing = status?.status === 'syncing'
+  
+  return (
+    <motion.button
+      initial={{ opacity: 0, y: 8 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ delay: connector.type === 'slack' ? 0 : connector.type === 'google_docs' ? 0.06 : 0.12, duration: 0.3 }}
+      onClick={onClick}
+      disabled={disabled || isConnected}
+      className={`group relative overflow-hidden rounded-xl border border-[#DDD5C8] bg-[#FBF9F5] p-4 text-left transition-all duration-200 ${
+        isConnected 
+          ? 'border-[#5E6B3F]/30 bg-[#F5F1E8]' 
+          : disabled 
+          ? 'opacity-40' 
+          : 'hover:-translate-y-0.5 hover:shadow-card-hover'
+      }`}
+    >
+      <div className="flex items-center gap-3">
+        <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg border border-[#DDD5C8]/60 bg-[#F5F1E8] transition-colors">
+          {isSyncing ? (
+            <Loader2 className="h-[18px] w-[18px] text-[#5E6B3F] animate-spin" />
+          ) : isConnected ? (
+            <Check className="h-[18px] w-[18px] text-[#5E6B3F]" />
+          ) : (
+            <connector.icon className="h-[18px] w-[18px] text-[#5E6B3F]" />
+          )}
+        </div>
+        <div className="min-w-0 flex-1">
+          <div className="flex items-center gap-2">
+            <p className="text-sm font-medium text-[#2B2A26]">{connector.name}</p>
+            {isConnected && (
+              <span className="px-2 py-0.5 rounded-full bg-[#5E6B3F]/10 text-[10px] font-medium text-[#5E6B3F]">
+                Connected
+              </span>
+            )}
+            {isSyncing && (
+              <span className="px-2 py-0.5 rounded-full bg-[#A8B18A]/20 text-[10px] font-medium text-[#5E6B3F]">
+                Syncing...
+              </span>
+            )}
+          </div>
+          <p className="text-xs text-[#6D685F]">
+            {isSyncing 
+              ? `Syncing${status?.progress ? ` (${Math.round(status.progress * 100)}%)` : ''}` 
+              : connector.description}
+          </p>
+        </div>
+        {!isConnected && !isSyncing && (
+          <ArrowRight className="h-4 w-4 shrink-0 text-[#8A857D] opacity-0 transition-all duration-200 group-hover:translate-x-0.5 group-hover:opacity-100" />
+        )}
+      </div>
+    </motion.button>
+  )
+}
+
 export default function OnboardingPage() {
   const [step, setStep] = useState<1 | 2>(1)
   const [name, setName] = useState('')
-  const [selected, setSelected] = useState<string | null>(null)
   const navigate = useNavigate()
   const { user, token, onboardingCompleted, completeOnboarding } = useAppStore()
+  const { data: connectors, refetch } = useConnectors()
 
   const isAuthenticated = user !== null && token !== null
+
+  // Poll for connector status updates every 2 seconds when on step 2
+  useEffect(() => {
+    let interval: NodeJS.Timeout
+    if (step === 2) {
+      interval = setInterval(() => {
+        refetch()
+      }, 2000)
+    }
+    return () => clearInterval(interval)
+  }, [step, refetch])
 
   // Redirect if not authenticated or already completed onboarding
   useEffect(() => {
@@ -121,13 +195,7 @@ export default function OnboardingPage() {
   }
 
   const handleConnectorClick = (type: string) => {
-    setSelected(type)
-    // First complete onboarding before redirecting to connector install
-    const workspace = { id: 'ws-' + Date.now(), name: name }
-    completeOnboarding(workspace)
-    setTimeout(() => {
-      window.location.href = `http://localhost:8000/connectors/${type}/install`
-    }, 350)
+    window.location.href = `http://localhost:8000/connectors/${type}/install`
   }
 
   if (!isAuthenticated || onboardingCompleted) {
@@ -221,38 +289,19 @@ export default function OnboardingPage() {
                 </p>
 
                 <div className="mt-6 flex flex-col gap-2.5">
-                  {CONNECTORS.map((c, i) => (
-                    <motion.button
+                  {CONNECTORS.map((c) => (
+                    <ConnectorCard
                       key={c.type}
-                      initial={{ opacity: 0, y: 8 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      transition={{ delay: i * 0.06, duration: 0.3 }}
+                      connector={c}
+                      status={connectors?.find(conn => conn.type === c.type)}
                       onClick={() => handleConnectorClick(c.type)}
-                      disabled={selected !== null}
-                      className={`group relative overflow-hidden rounded-xl border border-[#DDD5C8] bg-[#FBF9F5] p-4 text-left transition-all duration-200 ${
-                        selected === c.type
-                          ? 'scale-[0.97] opacity-60'
-                          : selected !== null
-                          ? 'opacity-40'
-                          : 'hover:-translate-y-0.5 hover:shadow-card-hover'
-                      }`}
-                    >
-                      <div className="flex items-center gap-3">
-                        <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg border border-[#DDD5C8]/60 bg-[#F5F1E8] transition-colors">
-                          <c.icon className="h-[18px] w-[18px] text-[#5E6B3F]" />
-                        </div>
-                        <div className="min-w-0 flex-1">
-                          <p className="text-sm font-medium text-[#2B2A26]">{c.name}</p>
-                          <p className="text-xs text-[#6D685F]">{c.description}</p>
-                        </div>
-                        <ArrowRight className="h-4 w-4 shrink-0 text-[#8A857D] opacity-0 transition-all duration-200 group-hover:translate-x-0.5 group-hover:opacity-100" />
-                      </div>
-                    </motion.button>
+                      disabled={false}
+                    />
                   ))}
                 </div>
 
                 <div className="mt-5 flex items-center justify-between">
-                  <button onClick={() => { setSelected(null); setStep(1) }} className="text-xs text-[#8A857D] transition-colors hover:text-[#2B2A26]">
+                  <button onClick={() => setStep(1)} className="text-xs text-[#8A857D] transition-colors hover:text-[#2B2A26]">
                     ← Back
                   </button>
                   <button onClick={handleCompleteOnboarding} className="text-xs text-[#8A857D] transition-colors hover:text-[#2B2A26]">

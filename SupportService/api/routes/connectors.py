@@ -1,4 +1,5 @@
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter, HTTPException, Request
+from fastapi.responses import RedirectResponse
 import secrets
 import requests
 from ingestion.connectors.slack.oauth import SlackOAuth
@@ -12,6 +13,9 @@ router = APIRouter()
 store = CredentialStore(settings.REDIS_URL, settings.ENCRYPTION_KEY)
 queue = JobQueue()
 
+# Frontend URL for redirect after OAuth
+FRONTEND_URL = "http://localhost:5173"
+
 
 # ─── Slack ───────────────────────────────────────────────────────────
 
@@ -19,7 +23,7 @@ queue = JobQueue()
 async def slack_install():
     state = secrets.token_urlsafe(32)
     url = SlackOAuth().get_authorize_url(state)
-    return {"url": url}
+    return RedirectResponse(url=url)
 
 @router.get("/connectors/slack/callback")
 async def slack_callback(code: str, state: str):
@@ -35,7 +39,8 @@ async def slack_callback(code: str, state: str):
     store.save("slack", workspace_id, credentials)
     queue.enqueue_backfill("slack", workspace_id)
 
-    return {"status": "connected", "workspace_id": workspace_id, "team_name": credentials.get("team_name")}
+    # Redirect back to onboarding page
+    return RedirectResponse(url=f"{FRONTEND_URL}/onboarding")
 
 
 # ─── Google Docs ─────────────────────────────────────────────────────
@@ -44,7 +49,7 @@ async def slack_callback(code: str, state: str):
 async def google_docs_install():
     state = secrets.token_urlsafe(32)
     url = GoogleDocsOAuth().get_authorize_url(state)
-    return {"url": url}
+    return RedirectResponse(url=url)
 
 @router.get("/connectors/google_docs/callback")
 async def google_docs_callback(code: str, state: str):
@@ -72,7 +77,8 @@ async def google_docs_callback(code: str, state: str):
     store.save("google_docs", workspace_id, credentials)
     queue.enqueue_backfill("google_docs", workspace_id)
 
-    return {"status": "connected", "workspace_id": workspace_id, "email": user_email}
+    # Redirect back to onboarding page
+    return RedirectResponse(url=f"{FRONTEND_URL}/onboarding")
 
 
 # ─── Notion ──────────────────────────────────────────────────────────
@@ -81,7 +87,7 @@ async def google_docs_callback(code: str, state: str):
 async def notion_install():
     state = secrets.token_urlsafe(32)
     url = NotionOAuth().get_authorize_url(state)
-    return {"url": url}
+    return RedirectResponse(url=url)
 
 @router.get("/connectors/notion/callback")
 async def notion_callback(code: str, state: str):
@@ -97,4 +103,5 @@ async def notion_callback(code: str, state: str):
     store.save("notion", workspace_id, credentials)
     queue.enqueue_backfill("notion", workspace_id)
 
-    return {"status": "connected", "workspace_id": workspace_id, "workspace_name": credentials.get("workspace_name")}
+    # Redirect back to onboarding page
+    return RedirectResponse(url=f"{FRONTEND_URL}/onboarding")
