@@ -1,4 +1,4 @@
-from typing import Dict, Any, Optional
+from typing import Dict, Any, Optional, List, Tuple
 import json
 import redis
 from cryptography.fernet import Fernet
@@ -30,3 +30,14 @@ class CredentialStore:
 
     def delete(self, source_type: str, workspace_id: str):
         self.redis.delete(self._key(source_type, workspace_id))
+
+    def list_all(self) -> List[Tuple[str, str]]:
+        """List all (source_type, workspace_id) pairs that have credentials stored."""
+        keys = self.redis.keys(b"credentials:*")
+        results = []
+        for key_bytes in keys:
+            key_str = key_bytes.decode()
+            parts = key_str.split(":")
+            if len(parts) == 3:
+                results.append((parts[1], parts[2]))
+        return results

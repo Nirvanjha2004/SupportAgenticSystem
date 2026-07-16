@@ -3,7 +3,7 @@ import os
 from contextlib import asynccontextmanager
 from typing import List, Optional
 
-from fastapi import FastAPI, HTTPException, Request
+from fastapi import FastAPI, HTTPException, Request, Query
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import StreamingResponse
 from pydantic import BaseModel, Field
@@ -14,6 +14,8 @@ from api.routes import connectors, webhooks
 from vectorstore.store import VectorStore
 from rag.chain import build_rag_chain, build_structured_rag_chain, stream_rag_answer
 from rag.models import CitedAnswer
+from ingestion.storage.credentials import CredentialStore
+from ingestion.jobs.queue import JobQueue
 
 # ─── CRITICAL: Import connectors to trigger self-registration ─────────
 import ingestion.connectors.slack      # noqa: F401
@@ -30,6 +32,8 @@ async def lifespan(app: FastAPI):
     app.state.rag_chain = build_rag_chain(app.state.vectorstore, stream=False)
     app.state.rag_stream_chain = build_rag_chain(app.state.vectorstore, stream=True)
     app.state.structured_chain = build_structured_rag_chain(app.state.vectorstore)
+    app.state.credential_store = CredentialStore(settings.REDIS_URL, settings.ENCRYPTION_KEY)
+    app.state.job_queue = JobQueue()
     yield
     # Shutdown (Chroma persists automatically, nothing to close)
     pass
@@ -72,6 +76,16 @@ class QueryRequest(BaseModel):
 class QueryResponse(BaseModel):
     answer: str
     sources: List[dict] = Field(default_factory=list)
+
+
+class ConnectorStatusResponse(BaseModel):
+    type: str
+    name: str
+    connected: bool
+    status: str
+    last_synced: Optional[str] = None
+    doc_count: Optional[int] = None
+    progress: Optional[float] = None
 
 
 # ─── Health ──────────────────────────────────────────────────────────
@@ -125,6 +139,69 @@ async def query_stream(req: QueryRequest):
         event_generator(),
         media_type="text/event-stream"
     )
+
+
+# ─── Connectors ───────────────────────────────────────────────────────
+
+@app.get("/connectors", response_model=List[ConnectorStatusResponse])
+async def get_connectors():
+    """List all connectors and their status."""
+    connectors_list = [
+        {"type": "slack", "name": "Slack"},
+        {"type": "google_docs", "name": "Google Docs"},
+        {"type": "notion", "name": "Notion"}
+    ]
+    
+    connected_pairs = app.state.credential_store.list_all()
+    connected_sources = {src_type for src_type, _ in connected_pairs}
+    
+    response = []
+    for conn in connectors_list:
+        doc_count = app.state.vectorstore.count_by_source(conn["type"]) if conn["type"] in connected_sources else 0
+        jobs = app.state.job_queue.get_jobs_by_source(conn["type"])
+        latest_job = jobs[0] if jobs else None
+        
+        status = "idle"
+        progress = None
+        if conn["type"] in connected_sources:
+            if latest_job and latest_job.get("stage") in ["fetching", "chunking", "embedding"]:
+                status = "syncing"
+                progress = latest_job.get("progress")
+            else:
+                status = "synced"
+        
+        response.append(ConnectorStatusResponse(
+            type=conn["type"],
+            name=conn["name"],
+            connected=conn["type"] in connected_sources,
+            status=status,
+            doc_count=doc_count if doc_count > 0 else None,
+            progress=progress,
+            last_synced=latest_job.get("timestamp") if latest_job else None
+        ))
+    
+    return response
+
+
+# ─── Documents ────────────────────────────────────────────────────────
+
+@app.get("/documents")
+async def get_documents(
+    q: Optional[str] = Query(None, description="Search query"),
+    source: Optional[str] = Query(None, description="Filter by source type (slack, google_docs, notion)")
+):
+    """Get list of documents, optionally filtered by query or source."""
+    docs = app.state.vectorstore.get_documents(query=q, source_type=source)
+    return docs
+
+
+# ─── Sources Jobs ─────────────────────────────────────────────────────
+
+@app.get("/sources/{source_type}/jobs")
+async def get_source_jobs(source_type: str):
+    """Get ingestion jobs for a specific source type."""
+    jobs = app.state.job_queue.get_jobs_by_source(source_type)
+    return jobs
 
 
 # ─── Helpers ─────────────────────────────────────────────────────────

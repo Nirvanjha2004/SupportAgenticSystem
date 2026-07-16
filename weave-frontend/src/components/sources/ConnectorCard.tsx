@@ -11,6 +11,9 @@ const icons: Record<string, string> = {
 }
 
 export default function ConnectorCard({ conn }: { conn: ConnectorStatus }) {
+  const lastSynced = conn.last_synced || conn.lastSynced
+  const docCount = conn.doc_count || conn.docCount
+
   return (
     <motion.div
       layout
@@ -23,7 +26,7 @@ export default function ConnectorCard({ conn }: { conn: ConnectorStatus }) {
             <h3 className="font-display font-medium text-[#2B2A26]">{conn.name}</h3>
             <p className="font-mono text-xs text-[#8A857D]">
               {conn.connected
-                ? `${conn.docCount ?? 0} docs · ${conn.lastSynced || 'Never'}`
+                ? `${docCount ?? 0} docs · ${lastSynced || 'Never'}`
                 : 'Not connected'}
             </p>
           </div>

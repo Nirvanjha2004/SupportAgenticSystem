@@ -1,4 +1,4 @@
-from typing import List, Optional, Tuple
+from typing import List, Optional, Tuple, Dict, Any
 from langchain_chroma import Chroma
 from langchain_core.documents import Document
 from config import settings
@@ -80,6 +80,44 @@ class VectorStore:
             query, k=k, filter=filter_dict or None
         )
         return [doc for doc, score in results if score <= threshold]
+
+    def get_documents(self, query: Optional[str] = None, source_type: Optional[str] = None, k: int = 100) -> List[Dict[str, Any]]:
+        """Get documents, optionally filtered by query and source type."""
+        filter_dict: Dict[str, Any] = {}
+        if source_type:
+            filter_dict["source_type"] = source_type
+        
+        if query:
+            docs = self.search(query, k=k, filter_dict=filter_dict if filter_dict else None)
+        else:
+            # Get all docs (or up to k)
+            result = self.store._collection.get(
+                limit=k,
+                where=filter_dict if filter_dict else None
+            )
+            docs = [
+                Document(page_content=doc, metadata=meta)
+                for doc, meta in zip(result["documents"] or [], result["metadatas"] or [])
+            ]
+        
+        # Group by raw_id to avoid duplicate chunks in the list
+        unique_docs: Dict[str, Dict[str, Any]] = {}
+        for doc in docs:
+            raw_id = doc.metadata.get("raw_id", doc.id)
+            if raw_id not in unique_docs:
+                unique_docs[raw_id] = {
+                    "title": doc.metadata.get("title", "Untitled"),
+                    "snippet": doc.page_content[:150] + "..." if len(doc.page_content) > 150 else doc.page_content,
+                    "source": doc.metadata.get("source_type", "unknown"),
+                    "date": doc.metadata.get("updated_at", doc.metadata.get("created_at", "Unknown"))
+                }
+        
+        return list(unique_docs.values())
+
+    def count_by_source(self, source_type: str) -> int:
+        """Count number of documents (chunks) for a source type."""
+        result = self.store._collection.get(where={"source_type": source_type})
+        return len(result["ids"] or [])
 
     def delete_by_workspace(self, workspace_id: str) -> None:
         self.store._collection.delete(where={"workspace_id": workspace_id})

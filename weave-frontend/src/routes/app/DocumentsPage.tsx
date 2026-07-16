@@ -1,35 +1,51 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { motion } from 'framer-motion'
 import DocumentSearchBar from '../../components/documents/DocumentSearchBar'
 import DocumentRow from '../../components/documents/DocumentRow'
 import { FileText, Filter } from 'lucide-react'
+import { apiFetch } from '../../lib/api'
 
-const mockDocs = [
-  {
-    title: 'Refund policy — Q3 update',
-    snippet: 'Customers who purchased within 30 days are eligible for a full refund. After 30 days, partial refunds...',
-    source: 'Notion',
-    date: '3 days ago',
-  },
-  {
-    title: '#support-eng thread: API outage postmortem',
-    snippet: 'Root cause was a missing index on the events table. Fix deployed at 14:23 UTC...',
-    source: 'Slack',
-    date: '1 week ago',
-  },
-]
+interface Document {
+  title: string
+  snippet: string
+  source: string
+  date: string
+}
 
 export default function DocumentsPage() {
   const [query, setQuery] = useState('')
   const [activeFilter, setActiveFilter] = useState('All')
+  const [documents, setDocuments] = useState<Document[]>([])
+  const [loading, setLoading] = useState(false)
 
   const filters = ['All', 'Slack', 'Notion', 'Google Docs']
 
-  const filteredDocs = mockDocs.filter((d) => {
-    const matchesQuery = d.title.toLowerCase().includes(query.toLowerCase()) || d.snippet.toLowerCase().includes(query.toLowerCase())
-    const matchesFilter = activeFilter === 'All' || d.source === activeFilter
-    return matchesQuery && matchesFilter
-  })
+  useEffect(() => {
+    const fetchDocuments = async () => {
+      setLoading(true)
+      try {
+        const sourceMap: Record<string, string> = {
+          'Slack': 'slack',
+          'Notion': 'notion',
+          'Google Docs': 'google_docs',
+        }
+        const sourceParam = activeFilter !== 'All' ? sourceMap[activeFilter] : undefined
+        const params = new URLSearchParams()
+        if (query) params.set('q', query)
+        if (sourceParam) params.set('source', sourceParam)
+        
+        const data = await apiFetch(`/documents?${params.toString()}`)
+        setDocuments(data || [])
+      } catch (error) {
+        console.error('Failed to fetch documents:', error)
+        setDocuments([])
+      } finally {
+        setLoading(false)
+      }
+    }
+
+    fetchDocuments()
+  }, [query, activeFilter])
 
   return (
     <motion.div
@@ -77,22 +93,27 @@ export default function DocumentsPage() {
       {/* Results count */}
       <div className="flex items-center gap-2 text-xs text-[#8A857D]">
         <FileText className="h-3.5 w-3.5" />
-        <span className="font-mono">{filteredDocs.length} document{filteredDocs.length !== 1 ? 's' : ''} found</span>
+        <span className="font-mono">{documents.length} document{documents.length !== 1 ? 's' : ''} found</span>
       </div>
 
       {/* Document list */}
       <div className="space-y-3">
-        {filteredDocs.map((d, i) => (
-          <motion.div
-            key={d.title}
-            initial={{ opacity: 0, y: 12 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: i * 0.06 }}
-          >
-            <DocumentRow {...d} />
-          </motion.div>
-        ))}
-        {query && filteredDocs.length === 0 && (
+        {loading ? (
+          <div className="card-sand flex flex-col items-center py-12 text-center">
+            <p className="text-sm text-[#6D685F]">Loading documents...</p>
+          </div>
+        ) : documents.length > 0 ? (
+          documents.map((d, i) => (
+            <motion.div
+              key={i}
+              initial={{ opacity: 0, y: 12 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: i * 0.06 }}
+            >
+              <DocumentRow {...d} />
+            </motion.div>
+          ))
+        ) : (
           <div className="card-sand flex flex-col items-center py-12 text-center">
             <FileText className="h-10 w-10 text-[#8A857D]/40 mb-3" />
             <p className="text-sm text-[#6D685F]">No documents match that search.</p>

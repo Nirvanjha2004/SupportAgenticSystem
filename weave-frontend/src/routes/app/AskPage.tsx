@@ -3,6 +3,7 @@ import { motion, AnimatePresence } from 'framer-motion'
 import { Send, MessageSquare, Plus, Sparkles } from 'lucide-react'
 import MessageBubble from '../../components/ask/MessageBubble'
 import RetrievalStatus from '../../components/ask/RetrievalStatus'
+import { apiFetch } from '../../lib/api'
 
 interface Msg {
   role: 'user' | 'assistant'
@@ -29,20 +30,46 @@ export default function AskPage() {
     setMessages((m) => [...m, { role: 'user', content: question }])
     setLoading(true)
 
-    setTimeout(() => {
+    try {
+      // First try non-streaming query
+      const response = await apiFetch('/query', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          question: question,
+          chat_history: messages.map(m => ({ role: m.role, content: m.content })),
+          stream: false,
+          structured: false,
+        }),
+      })
+
       setMessages((m) => [
         ...m,
         {
           role: 'assistant',
-          content: 'You can reset the staging database by running `make db-reset` from the root directory. This is documented in the onboarding guide [1] and was also discussed in #engineering last Tuesday [2].',
-          sources: [
-            { index: 1, label: 'Onboarding Guide · Notion', content: 'Run `make db-reset` to wipe and re-seed the staging database.' },
-            { index: 2, label: '#engineering · Slack · Jul 14', content: 'Alice: Just run make db-reset, takes ~30s.' },
-          ],
+          content: response.answer,
+          sources: response.sources?.length ? response.sources.map((s: any, i: number) => ({
+            index: i + 1,
+            label: `Source ${i + 1}`,
+            content: JSON.stringify(s),
+          })) : undefined,
         },
       ])
+    } catch (error) {
+      console.error('Query failed:', error)
+      // Fallback to mock response if API fails
+      setMessages((m) => [
+        ...m,
+        {
+          role: 'assistant',
+          content: 'Sorry, I encountered an error while processing your request. Please try again later.',
+        },
+      ])
+    } finally {
       setLoading(false)
-    }, 2500)
+    }
   }
 
   const handleKeyDown = (e: React.KeyboardEvent) => {
