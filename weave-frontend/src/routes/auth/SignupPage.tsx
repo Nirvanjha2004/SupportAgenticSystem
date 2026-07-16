@@ -11,6 +11,7 @@ import {
   OrDivider,
   LegalFooter,
 } from '../../components/auth/AuthShared'
+import { useAppStore } from '../../store/useAppStore'
 
 type Strength = 0 | 1 | 2 | 3 | 4
 
@@ -73,6 +74,7 @@ export default function SignupPage() {
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
   const navigate = useNavigate()
+  const { login } = useAppStore()
 
   const clearError = () => setError('')
 
@@ -89,9 +91,23 @@ export default function SignupPage() {
       return
     }
     setLoading(true)
-    await new Promise((r) => setTimeout(r, 1000))
-    setLoading(false)
-    navigate('/onboarding')
+    try {
+      // Simulate API call
+      await new Promise((r) => setTimeout(r, 1000))
+      login(
+        {
+          id: 'user-1',
+          name,
+          email,
+        },
+        'demo-token-12345'
+      )
+      navigate('/dashboard')
+    } catch (err) {
+      setError('Something went wrong. Please try again.')
+    } finally {
+      setLoading(false)
+    }
   }
 
   return (

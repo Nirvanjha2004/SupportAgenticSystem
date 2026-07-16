@@ -1,12 +1,22 @@
-﻿const API_BASE = 'http://localhost:8000'
+﻿import { useAppStore } from '../store/useAppStore'
+
+const API_BASE = 'http://localhost:8000'
 
 export async function apiFetch(path: string, opts?: RequestInit) {
+  const token = useAppStore.getState().token
+
+  const headers: Record<string, string> = {
+    'Content-Type': 'application/json',
+    ...opts?.headers,
+  }
+
+  if (token) {
+    headers['Authorization'] = `Bearer ${token}`
+  }
+
   const res = await fetch(`${API_BASE}${path}`, {
     ...opts,
-    headers: {
-      'Content-Type': 'application/json',
-      ...opts?.headers,
-    },
+    headers,
   })
   if (!res.ok) {
     const text = await res.text()

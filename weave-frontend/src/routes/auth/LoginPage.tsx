@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { Link } from 'react-router-dom'
+import { Link, useNavigate } from 'react-router-dom'
 import { motion } from 'framer-motion'
 import { Eye, EyeOff, AlertCircle, ArrowRight } from 'lucide-react'
 import {
@@ -11,6 +11,7 @@ import {
   OrDivider,
   LegalFooter,
 } from '../../components/auth/AuthShared'
+import { useAppStore } from '../../store/useAppStore'
 
 export default function LoginPage() {
   const [show, setShow] = useState(false)
@@ -18,14 +19,31 @@ export default function LoginPage() {
   const [password, setPassword] = useState('')
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
+  const { login } = useAppStore()
+  const navigate = useNavigate()
 
   const handleSubmit = async () => {
     setError('')
     if (!email || !password) { setError('Please fill in both fields.'); return }
     setLoading(true)
-    await new Promise((r) => setTimeout(r, 900))
-    setLoading(false)
-    setError('Invalid email or password. Please try again.')
+    try {
+      // Simulate API call
+      await new Promise((r) => setTimeout(r, 900))
+      // Demo: accept any non-empty email/password for now
+      login(
+        {
+          id: 'user-1',
+          name: email.split('@')[0],
+          email,
+        },
+        'demo-token-12345'
+      )
+      navigate('/dashboard')
+    } catch (err) {
+      setError('Invalid email or password. Please try again.')
+    } finally {
+      setLoading(false)
+    }
   }
 
   const clearError = () => setError('')

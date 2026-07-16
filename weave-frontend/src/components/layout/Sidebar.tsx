@@ -8,6 +8,7 @@ import {
   LayoutDashboard,
   ChevronLeft,
   ChevronRight,
+  LogOut,
 } from 'lucide-react'
 import { motion } from 'framer-motion'
 
@@ -23,6 +24,8 @@ export default function Sidebar() {
   const collapsed = useAppStore((s) => s.sidebarCollapsed)
   const toggle = useAppStore((s) => s.toggleSidebar)
   const workspace = useAppStore((s) => s.activeWorkspace)
+  const user = useAppStore((s) => s.user)
+  const logout = useAppStore((s) => s.logout)
   const location = useLocation()
 
   return (
@@ -80,8 +83,33 @@ export default function Sidebar() {
       )}
 
       <div className="flex h-14 items-center gap-2 border-t border-[#DDD5C8] px-3">
-        <div className="h-8 w-8 rounded-full bg-[#EEE7DA]" />
-        {!collapsed && <span className="text-sm text-[#6D685F]">You</span>}
+        <div className="h-8 w-8 rounded-full bg-[#5E6B3F] flex items-center justify-center text-sm font-bold text-[#FBF9F5]">
+          {user?.name?.[0] || 'Y'}
+        </div>
+        {!collapsed && (
+          <div className="flex-1 flex items-center justify-between">
+            <div className="flex flex-col">
+              <span className="text-sm font-medium text-[#2B2A26]">{user?.name || 'You'}</span>
+              <span className="text-xs text-[#8A857D] truncate">{user?.email}</span>
+            </div>
+            <button
+              onClick={logout}
+              className="rounded-btn p-1.5 text-[#8A857D] transition-colors hover:bg-[#A84F3A]/10 hover:text-[#A84F3A]"
+              title="Log out"
+            >
+              <LogOut size={16} />
+            </button>
+          </div>
+        )}
+        {collapsed && (
+          <button
+            onClick={logout}
+            className="rounded-btn p-1.5 text-[#8A857D] transition-colors hover:bg-[#A84F3A]/10 hover:text-[#A84F3A]"
+            title="Log out"
+          >
+            <LogOut size={16} />
+          </button>
+        )}
       </div>
     </motion.aside>
   )
