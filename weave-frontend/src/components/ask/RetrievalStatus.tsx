@@ -1,24 +1,20 @@
-﻿import { useEffect, useState } from 'react'
+import { useEffect, useState } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { MessageSquare, FileText, FileSpreadsheet, Check } from 'lucide-react'
-
-// ─── types ───────────────────────────────────────────────────────────────────
 
 interface Step {
   id: string
   label: string
-  detail: string          // shown while this step is active
-  doneDetail: string      // shown once this step is complete
-  duration: number        // ms until this step is "done"
+  detail: string
+  doneDetail: string
+  duration: number
 }
 
 interface Source {
   icon: typeof MessageSquare
   label: string
-  count: number           // chunks found
+  count: number
 }
-
-// ─── data ────────────────────────────────────────────────────────────────────
 
 const STEPS: Step[] = [
   {
@@ -50,83 +46,51 @@ const SOURCES: Source[] = [
   { icon: FileSpreadsheet, label: 'Docs', count: 1 },
 ]
 
-// ─── sub-components ──────────────────────────────────────────────────────────
-
 function PulsingDot() {
   return (
     <span className="relative flex h-2 w-2 shrink-0">
       <motion.span
-        className="absolute inline-flex h-full w-full rounded-full bg-accent"
+        className="absolute inline-flex h-full w-full rounded-full bg-[#5E6B3F]"
         animate={{ scale: [1, 1.9], opacity: [0.7, 0] }}
         transition={{ duration: 1.1, repeat: Infinity, ease: 'easeOut' }}
       />
-      <span className="relative inline-flex h-2 w-2 rounded-full bg-accent" />
+      <span className="relative inline-flex h-2 w-2 rounded-full bg-[#5E6B3F]" />
     </span>
   )
 }
 
-function StepRow({
-  step,
-  state,
-}: {
-  step: Step
-  state: 'pending' | 'active' | 'done'
-}) {
+function StepRow({ step, state }: { step: Step; state: 'pending' | 'active' | 'done' }) {
   return (
     <div className="flex items-start gap-3">
-      {/* icon */}
       <div className="mt-0.5 flex h-4 w-4 shrink-0 items-center justify-center">
         {state === 'done' ? (
-          <motion.div
-            initial={{ scale: 0 }}
-            animate={{ scale: 1 }}
-            transition={{ type: 'spring', stiffness: 400, damping: 20 }}
-          >
-            <Check className="h-3.5 w-3.5 text-signal-green" />
+          <motion.div initial={{ scale: 0 }} animate={{ scale: 1 }} transition={{ type: 'spring', stiffness: 400, damping: 20 }}>
+            <Check className="h-3.5 w-3.5 text-[#567D46]" />
           </motion.div>
         ) : state === 'active' ? (
           <PulsingDot />
         ) : (
-          <span className="h-1.5 w-1.5 rounded-full bg-line" />
+          <span className="h-1.5 w-1.5 rounded-full bg-[#DDD5C8]" />
         )}
       </div>
-
-      {/* text */}
       <div className="min-w-0 flex-1">
         <div className="flex items-baseline gap-2">
-          <span
-            className={`text-xs font-medium transition-colors duration-300 ${
-              state === 'done'
-                ? 'text-text-muted'
-                : state === 'active'
-                ? 'text-text-primary'
-                : 'text-text-muted/40'
-            }`}
-          >
+          <span className={`text-xs font-medium transition-colors duration-300 ${
+            state === 'done' ? 'text-[#6D685F]' : state === 'active' ? 'text-[#2B2A26]' : 'text-[#8A857D]/40'
+          }`}>
             {step.label}
           </span>
           {state === 'done' && (
-            <motion.span
-              initial={{ opacity: 0, x: -4 }}
-              animate={{ opacity: 1, x: 0 }}
-              transition={{ duration: 0.3 }}
-              className="font-mono text-[10px] text-signal-green"
-            >
+            <motion.span initial={{ opacity: 0, x: -4 }} animate={{ opacity: 1, x: 0 }} transition={{ duration: 0.3 }}
+              className="font-mono text-[10px] text-[#567D46]">
               {step.doneDetail}
             </motion.span>
           )}
         </div>
-
-        {/* active detail line */}
         <AnimatePresence>
           {state === 'active' && (
-            <motion.p
-              initial={{ opacity: 0, height: 0 }}
-              animate={{ opacity: 1, height: 'auto' }}
-              exit={{ opacity: 0, height: 0 }}
-              transition={{ duration: 0.25 }}
-              className="mt-0.5 font-mono text-[10px] leading-relaxed text-text-muted"
-            >
+            <motion.p initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: 'auto' }} exit={{ opacity: 0, height: 0 }}
+              className="mt-0.5 font-mono text-[10px] leading-relaxed text-[#8A857D]">
               {step.detail}
             </motion.p>
           )}
@@ -140,25 +104,16 @@ function SourceChips({ visible }: { visible: boolean }) {
   return (
     <AnimatePresence>
       {visible && (
-        <motion.div
-          initial={{ opacity: 0, height: 0 }}
-          animate={{ opacity: 1, height: 'auto' }}
-          exit={{ opacity: 0, height: 0 }}
-          transition={{ duration: 0.3 }}
-          className="overflow-hidden"
-        >
+        <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: 'auto' }} exit={{ opacity: 0, height: 0 }}
+          className="overflow-hidden">
           <div className="flex flex-wrap gap-1.5 pt-1">
             {SOURCES.map((s, i) => (
-              <motion.div
-                key={s.label}
-                initial={{ opacity: 0, scale: 0.85 }}
-                animate={{ opacity: 1, scale: 1 }}
+              <motion.div key={s.label} initial={{ opacity: 0, scale: 0.85 }} animate={{ opacity: 1, scale: 1 }}
                 transition={{ delay: i * 0.1, type: 'spring', stiffness: 380, damping: 22 }}
-                className="flex items-center gap-1.5 rounded-full border border-line bg-ink px-2.5 py-1"
-              >
-                <s.icon className="h-3 w-3 text-text-muted" />
-                <span className="font-mono text-[10px] text-text-muted">{s.label}</span>
-                <span className="font-mono text-[10px] text-accent">+{s.count}</span>
+                className="flex items-center gap-1.5 rounded-full border border-[#DDD5C8] bg-[#FBF9F5] px-2.5 py-1">
+                <s.icon className="h-3 w-3 text-[#6D685F]" />
+                <span className="font-mono text-[10px] text-[#6D685F]">{s.label}</span>
+                <span className="font-mono text-[10px] text-[#5E6B3F]">+{s.count}</span>
               </motion.div>
             ))}
           </div>
@@ -168,16 +123,11 @@ function SourceChips({ visible }: { visible: boolean }) {
   )
 }
 
-// ─── main component ───────────────────────────────────────────────────────────
-
 interface RetrievalStatusProps {
-  /** Call this once the retrieval is done and streaming can begin */
   onComplete?: () => void
 }
 
 export default function RetrievalStatus({ onComplete }: RetrievalStatusProps) {
-  // `currentStep` = index of step currently in progress (0-based)
-  // when currentStep === STEPS.length, all done
   const [currentStep, setCurrentStep] = useState(0)
 
   useEffect(() => {
@@ -197,42 +147,35 @@ export default function RetrievalStatus({ onComplete }: RetrievalStatusProps) {
       initial={{ opacity: 0, y: 6 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.35 }}
-      className="w-full max-w-sm rounded-[10px] border border-line bg-surface/80 p-4 shadow-[0_8px_32px_-8px_rgba(0,0,0,0.5)] backdrop-blur-sm"
+      className="card-sand w-full max-w-sm p-4"
     >
-      {/* header */}
       <div className="mb-3 flex items-center justify-between">
         <div className="flex items-center gap-2">
           {!allDone && <PulsingDot />}
-          <span className="font-mono text-[11px] uppercase tracking-wider text-text-muted">
+          <span className="font-mono text-[11px] uppercase tracking-wider text-[#8A857D]">
             {allDone ? 'Retrieval complete' : 'Retrieving context'}
           </span>
         </div>
-
-        {/* progress fraction */}
-        <span className="font-mono text-[10px] text-text-muted">
+        <span className="font-mono text-[10px] text-[#8A857D]">
           {Math.min(currentStep, STEPS.length)}/{STEPS.length}
         </span>
       </div>
 
-      {/* thin progress bar */}
-      <div className="mb-4 h-px w-full overflow-hidden rounded-full bg-line">
+      <div className="mb-4 h-px w-full overflow-hidden rounded-full bg-[#DDD5C8]">
         <motion.div
-          className="h-full bg-gradient-to-r from-accent to-[#5B8DF0]"
+          className="h-full bg-[#5E6B3F]"
           animate={{ width: `${(Math.min(currentStep, STEPS.length) / STEPS.length) * 100}%` }}
           transition={{ duration: 0.5, ease: 'easeOut' }}
         />
       </div>
 
-      {/* step rows */}
       <div className="space-y-3">
         {STEPS.map((step, i) => {
-          const state =
-            i < currentStep ? 'done' : i === currentStep ? 'active' : 'pending'
+          const state = i < currentStep ? 'done' : i === currentStep ? 'active' : 'pending'
           return <StepRow key={step.id} step={step} state={state} />
         })}
       </div>
 
-      {/* source chips — appear after first step completes */}
       <SourceChips visible={currentStep >= 1} />
     </motion.div>
   )

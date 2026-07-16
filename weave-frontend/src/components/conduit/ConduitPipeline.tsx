@@ -27,7 +27,7 @@ interface Props {
  */
 export default function ConduitParticles({
   path,
-  color = '#6C63FF',
+  color = '#5E6B3F',
   duration = 2,
   size = 5,
   count = 3,

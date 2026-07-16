@@ -1,51 +1,83 @@
 import { motion } from 'framer-motion'
 
-// Placeholder companies for demo purposes — replace with real logos once you have customers.
-const COMPANIES = ['Northwind', 'Lumen Labs', 'Fieldstone', 'Arclight', 'Greywolf', 'Basecamp Rd']
+const COMPANIES = [
+  'Northwind', 'Lumen Labs', 'Fieldstone', 'Arclight',
+  'Greywolf', 'Basecamp Rd', 'Meridian', 'Summit',
+]
+
+const LOGOS_DUPLICATED = [...COMPANIES, ...COMPANIES]
 
 export default function SocialProof() {
   return (
-    <section className="border-t border-line bg-surface/40">
-      <div className="mx-auto max-w-6xl px-6 py-16">
-        <motion.p
+    <section className="relative bg-[#EEE7DA]">
+      <div className="divider-organic" />
+
+      <div className="mx-auto max-w-7xl px-6 py-24 md:px-10 md:py-28">
+        {/* Companies marquee */}
+        <motion.div
           initial={{ opacity: 0 }}
           whileInView={{ opacity: 1 }}
           viewport={{ once: true }}
-          className="text-center font-mono text-xs uppercase tracking-wider text-text-muted"
+          transition={{ duration: 0.6 }}
         >
-          Trusted by support and ops teams at
-        </motion.p>
+          <p className="text-center font-mono text-[9px] font-medium uppercase tracking-[0.15em] text-[#8A857D]">
+            Trusted by support and ops teams at
+          </p>
 
-        <div className="mt-8 flex flex-wrap items-center justify-center gap-x-12 gap-y-6">
-          {COMPANIES.map((name, i) => (
-            <motion.span
-              key={name}
-              initial={{ opacity: 0, y: 8 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true }}
-              transition={{ delay: i * 0.05 }}
-              className="font-display text-lg font-medium text-text-muted/50 transition-colors hover:text-text-muted"
-            >
-              {name}
-            </motion.span>
-          ))}
-        </div>
+          <div className="relative mt-10 overflow-hidden">
+            <div className="pointer-events-none absolute inset-y-0 left-0 z-10 w-32 bg-gradient-to-r from-[#EEE7DA] to-transparent" />
+            <div className="pointer-events-none absolute inset-y-0 right-0 z-10 w-32 bg-gradient-to-l from-[#EEE7DA] to-transparent" />
 
-        <motion.blockquote
-          initial={{ opacity: 0, y: 16 }}
+            <div className="flex min-w-[200%] gap-20 animate-marquee">
+              {LOGOS_DUPLICATED.map((name, i) => (
+                <span
+                  key={`${name}-${i}`}
+                  className="shrink-0 font-display text-base font-semibold tracking-tight text-[#8A857D]/40 transition-colors hover:text-[#6D685F]/60"
+                >
+                  {name}
+                </span>
+              ))}
+            </div>
+          </div>
+        </motion.div>
+
+        {/* Testimonial — editorial card */}
+        <motion.div
+          initial={{ opacity: 0, y: 24 }}
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
-          transition={{ delay: 0.15 }}
-          className="mx-auto mt-16 max-w-2xl text-center"
+          transition={{ duration: 0.7, delay: 0.15, ease: [0.16, 1, 0.3, 1] }}
+          className="relative mx-auto mt-24 max-w-3xl"
         >
-          <p className="font-display text-xl font-medium leading-relaxed text-text-primary md:text-2xl">
-            "We stopped losing answers in Slack threads. Now the whole team just asks Weave
-            instead of pinging whoever remembers."
-          </p>
-          <footer className="mt-5 font-mono text-sm text-text-muted">
-            Priya Shah · Head of Support, Lumen Labs
-          </footer>
-        </motion.blockquote>
+          <div className="card-sand p-10 md:p-14 relative grain">
+            {/* Decorative large quote mark */}
+            <div className="absolute -top-6 -left-2 md:-top-8 md:-left-4 select-none">
+              <span className="font-serif text-[100px] leading-none text-[#DCCB9A]/60 md:text-[140px]">
+                &ldquo;
+              </span>
+            </div>
+
+            <blockquote className="relative z-10">
+              <p className="font-display text-xl font-medium leading-relaxed text-[#2B2A26] md:text-2xl md:leading-[1.4]">
+                We stopped losing answers in Slack threads. Now the whole team just asks Weave
+                instead of pinging whoever remembers.
+              </p>
+              <footer className="mt-8 flex items-center gap-4">
+                <div className="flex h-12 w-12 items-center justify-center rounded-full bg-[#E2E6D5] text-sm font-semibold text-[#5E6B3F]">
+                  PS
+                </div>
+                <div>
+                  <span className="block text-sm font-semibold text-[#2B2A26]">
+                    Priya Shah
+                  </span>
+                  <span className="block text-sm text-[#6D685F]">
+                    Head of Support, Lumen Labs
+                  </span>
+                </div>
+              </footer>
+            </blockquote>
+          </div>
+        </motion.div>
       </div>
     </section>
   )

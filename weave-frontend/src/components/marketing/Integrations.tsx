@@ -13,62 +13,96 @@ const INTEGRATIONS = [
 function StatusBadge({ status }: { status: 'connected' | 'soon' }) {
   if (status === 'connected') {
     return (
-      <span className="inline-flex items-center gap-1.5 rounded-full border border-line bg-ink px-2.5 py-1 font-mono text-[10px] text-signal-green">
-        <span className="h-1.5 w-1.5 rounded-full bg-signal-green" />
+      <span className="inline-flex items-center gap-1.5 rounded-full border border-[#A8B18A]/30 bg-[#E2E6D5] px-2.5 py-1 text-[10px] font-medium text-[#5E6B3F]">
+        <span className="h-1.5 w-1.5 rounded-full bg-[#5E6B3F]" />
         Live
       </span>
     )
   }
   return (
-    <span className="inline-flex items-center gap-1.5 rounded-full border border-line bg-ink px-2.5 py-1 font-mono text-[10px] text-text-muted">
+    <span className="inline-flex items-center gap-1.5 rounded-full border border-[#DDD5C8]/50 bg-[#F5F1E8] px-2.5 py-1 text-[10px] font-medium text-[#8A857D]">
+      <span className="h-1.5 w-1.5 rounded-full bg-[#C5BBAA]" />
       Coming soon
     </span>
   )
 }
 
+const cardVariants = {
+  hidden: { opacity: 0, y: 20 },
+  visible: (i: number) => ({
+    opacity: 1,
+    y: 0,
+    transition: { duration: 0.5, delay: i * 0.06, ease: [0.16, 1, 0.3, 1] },
+  }),
+}
+
 export default function Integrations() {
   return (
-    <section className="border-t border-line">
-      <div className="mx-auto max-w-6xl px-6 py-24">
-        <div className="flex items-end justify-between">
-          <div>
-            <span className="font-mono text-xs uppercase tracking-wider text-text-muted">Integrations</span>
-            <h2 className="mt-3 font-display text-3xl font-semibold tracking-tight text-text-primary">
-              Connect where your knowledge already lives
-            </h2>
-          </div>
-        </div>
+    <section id="integrations" className="relative bg-[#F5F1E8]">
+      <div className="divider-organic" />
 
-        <div className="mt-10 grid grid-cols-2 gap-4 md:grid-cols-3">
+      <div className="mx-auto max-w-7xl px-6 py-24 md:px-10 md:py-32">
+        {/* Section header */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true }}
+          transition={{ duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
+          className="max-w-2xl"
+        >
+          <span className="font-mono text-[9px] font-medium uppercase tracking-[0.15em] text-[#8A857D]">
+            Integrations
+          </span>
+          <h2 className="mt-5 font-display text-heading font-semibold tracking-tight text-[#2B2A26] md:text-heading-md">
+            Connect where your knowledge{' '}
+            <span className="relative inline-block">
+              <span className="text-[#6D685F]">already lives</span>
+              <span className="absolute -bottom-1 left-0 right-0 h-[2px] bg-[#DCCB9A]/60" />
+            </span>
+          </h2>
+        </motion.div>
+
+        {/* Floating tile grid */}
+        <div className="mt-16 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
           {INTEGRATIONS.map((item, i) => (
             <motion.div
               key={item.name}
-              initial={{ opacity: 0, y: 16 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true }}
-              transition={{ duration: 0.4, delay: i * 0.05 }}
-              whileHover={{ y: -4 }}
-              className={`flex items-center justify-between rounded-card border p-5 transition-colors ${
-                item.status === 'connected'
-                  ? 'border-line bg-surface hover:border-accent/50'
-                  : 'border-line/60 bg-surface/40'
+              custom={i}
+              initial="hidden"
+              whileInView="visible"
+              viewport={{ once: true, margin: '-30px' }}
+              variants={cardVariants}
+              className={`card-sand card-sand-hover p-5 ${
+                item.status === 'soon'
+                  ? 'opacity-60 hover:opacity-80'
+                  : ''
               }`}
             >
-              <div className="flex items-center gap-3">
-                <div className="flex h-9 w-9 items-center justify-center rounded-lg border border-line bg-surface-raised">
-                  <item.icon
-                    className={`h-4 w-4 ${item.status === 'connected' ? 'text-text-primary' : 'text-text-muted'}`}
-                  />
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-3">
+                  <div
+                    className={`flex h-10 w-10 items-center justify-center rounded-xl border transition-colors ${
+                      item.status === 'connected'
+                        ? 'border-[#DDD5C8]/60 bg-[#F5F1E8]'
+                        : 'border-[#DDD5C8]/30 bg-[#F5F1E8]/50'
+                    }`}
+                  >
+                    <item.icon
+                      className={`h-[18px] w-[18px] ${
+                        item.status === 'connected' ? 'text-[#5E6B3F]' : 'text-[#8A857D]'
+                      }`}
+                    />
+                  </div>
+                  <span
+                    className={`text-sm font-medium ${
+                      item.status === 'connected' ? 'text-[#2B2A26]' : 'text-[#8A857D]'
+                    }`}
+                  >
+                    {item.name}
+                  </span>
                 </div>
-                <span
-                  className={`text-sm font-medium ${
-                    item.status === 'connected' ? 'text-text-primary' : 'text-text-muted'
-                  }`}
-                >
-                  {item.name}
-                </span>
+                <StatusBadge status={item.status} />
               </div>
-              <StatusBadge status={item.status} />
             </motion.div>
           ))}
         </div>

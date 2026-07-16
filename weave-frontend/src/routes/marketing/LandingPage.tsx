@@ -1,4 +1,6 @@
-﻿import Navbar from '../../components/marketing/Navbar'
+import { useEffect, useState } from 'react'
+import { motion, useScroll, useSpring } from 'framer-motion'
+import Navbar from '../../components/marketing/Navbar'
 import Hero from '../../components/marketing/Hero'
 import FeatureGrid from '../../components/marketing/FeatureGrid'
 import Integrations from '../../components/marketing/Integrations'
@@ -10,19 +12,48 @@ import Stats from '../../components/marketing/Stats'
 import CTA from '../../components/marketing/CTA'
 import Footer from '../../components/marketing/Footer'
 
-export default function LandingPage() {
+function ScrollProgress() {
+  const { scrollYProgress } = useScroll()
+  const scaleY = useSpring(scrollYProgress, {
+    stiffness: 80,
+    damping: 25,
+    restDelta: 0.001,
+  })
+
   return (
-    <div className="min-h-screen bg-ink">
+    <motion.div
+      className="fixed top-0 left-0 right-0 z-[60] h-[2px] origin-left bg-[#5E6B3F]"
+      style={{ scaleY, opacity: scrollYProgress }}
+    />
+  )
+}
+
+export default function LandingPage() {
+  const [mounted, setMounted] = useState(false)
+
+  useEffect(() => {
+    setMounted(true)
+  }, [])
+
+  return (
+    <div className="relative min-h-screen bg-[#F5F1E8]">
+      {/* Scroll progress bar */}
+      {mounted && <ScrollProgress />}
+
       <Navbar />
-      <Hero />
-      <SocialProof />
-      <FeatureGrid />
-      <ProductShowcase />
-      <HowItWorks />
-      <AICapabilities />
-      <Integrations />
-      <Stats />
-      <CTA />
+
+      <main>
+        <Hero />
+        <SocialProof />
+        <FeatureGrid />
+        <ProductShowcase />
+        <HowItWorks />
+        <AICapabilities />
+        <Integrations />
+        <Stats />
+        <CTA />
+      </main>
+
       <Footer />
     </div>
   )
