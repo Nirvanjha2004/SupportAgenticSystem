@@ -1,7 +1,8 @@
-import { useState } from 'react'
-import { useNavigate, Link } from 'react-router-dom'
+import { useState, useEffect } from 'react'
+import { useNavigate, Link, Navigate } from 'react-router-dom'
 import { motion, AnimatePresence } from 'framer-motion'
 import { MessageSquare, FileSpreadsheet, FileText, ArrowRight, Check } from 'lucide-react'
+import { useAppStore } from '../../store/useAppStore'
 
 const CONNECTORS = [
   {
@@ -98,14 +99,39 @@ export default function OnboardingPage() {
   const [name, setName] = useState('')
   const [selected, setSelected] = useState<string | null>(null)
   const navigate = useNavigate()
+  const { user, token, onboardingCompleted, completeOnboarding } = useAppStore()
+
+  const isAuthenticated = user !== null && token !== null
+
+  // Redirect if not authenticated or already completed onboarding
+  useEffect(() => {
+    if (!isAuthenticated) {
+      navigate('/login', { replace: true })
+    } else if (onboardingCompleted) {
+      navigate('/dashboard', { replace: true })
+    }
+  }, [isAuthenticated, onboardingCompleted, navigate])
 
   const canContinue = name.trim().length >= 2
 
+  const handleCompleteOnboarding = () => {
+    const workspace = { id: 'ws-' + Date.now(), name: name }
+    completeOnboarding(workspace)
+    navigate('/dashboard')
+  }
+
   const handleConnectorClick = (type: string) => {
     setSelected(type)
+    // First complete onboarding before redirecting to connector install
+    const workspace = { id: 'ws-' + Date.now(), name: name }
+    completeOnboarding(workspace)
     setTimeout(() => {
       window.location.href = `http://localhost:8000/connectors/${type}/install`
     }, 350)
+  }
+
+  if (!isAuthenticated || onboardingCompleted) {
+    return null
   }
 
   return (
@@ -229,7 +255,7 @@ export default function OnboardingPage() {
                   <button onClick={() => { setSelected(null); setStep(1) }} className="text-xs text-[#8A857D] transition-colors hover:text-[#2B2A26]">
                     ← Back
                   </button>
-                  <button onClick={() => navigate('/dashboard')} className="text-xs text-[#8A857D] transition-colors hover:text-[#2B2A26]">
+                  <button onClick={handleCompleteOnboarding} className="text-xs text-[#8A857D] transition-colors hover:text-[#2B2A26]">
                     I'll do this later
                   </button>
                 </div>
