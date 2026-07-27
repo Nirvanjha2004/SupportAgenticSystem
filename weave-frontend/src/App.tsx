@@ -1,4 +1,4 @@
-﻿import { Routes, Route, Navigate, Outlet } from 'react-router-dom'
+﻿﻿import { Routes, Route, Navigate, Outlet } from 'react-router-dom'
 import LandingPage from './routes/marketing/LandingPage'
 import LoginPage from './routes/auth/LoginPage'
 import SignupPage from './routes/auth/SignupPage'
