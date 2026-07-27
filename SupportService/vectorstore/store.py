@@ -48,6 +48,14 @@ class VectorStore:
         meta.update(self._sanitize_metadata(doc.metadata))
         return Document(page_content=doc.content, metadata=meta)
 
+    def _format_chroma_filter(self, filter_dict: Optional[dict]) -> Optional[dict]:
+        """Format filter dict for Chroma; use $and operator if multiple fields exist."""
+        if not filter_dict:
+            return None
+        if len(filter_dict) == 1:
+            return filter_dict
+        return {"$and": [{k: v} for k, v in filter_dict.items()]}
+
     def upsert(self, documents: List[RawDocument]) -> int:
         if not documents:
             return 0
@@ -61,8 +69,8 @@ class VectorStore:
         return len(documents)
 
     def search(self, query: str, k: int = 5, filter_dict: Optional[dict] = None) -> List[Document]:
-        final_filter = filter_dict or {}
-        return self.store.similarity_search(query, k=k, filter=final_filter if final_filter else None)
+        final_filter = self._format_chroma_filter(filter_dict)
+        return self.store.similarity_search(query, k=k, filter=final_filter)
 
     def search_with_relevance(
         self, 
@@ -76,8 +84,9 @@ class VectorStore:
         Chroma uses cosine distance (0 = identical, 2 = opposite), so threshold
         of 0.3 ≈ 0.85 cosine similarity.
         """
+        final_filter = self._format_chroma_filter(filter_dict)
         results: List[Tuple[Document, float]] = self.store.similarity_search_with_score(
-            query, k=k, filter=filter_dict or None
+            query, k=k, filter=final_filter
         )
         return [doc for doc, score in results if score <= threshold]
 
@@ -99,9 +108,10 @@ class VectorStore:
             docs = self.search(query, k=k, filter_dict=filter_dict if filter_dict else None)
         else:
             # Get all docs (or up to k)
+            chroma_filter = self._format_chroma_filter(filter_dict)
             result = self.store._collection.get(
                 limit=k,
-                where=filter_dict if filter_dict else None
+                where=chroma_filter
             )
             docs = [
                 Document(page_content=doc, metadata=meta)
@@ -127,13 +137,15 @@ class VectorStore:
         where_filter: Dict[str, Any] = {"source_type": source_type}
         if workspace_id:
             where_filter["workspace_id"] = workspace_id
-        result = self.store._collection.get(where=where_filter)
+        chroma_filter = self._format_chroma_filter(where_filter)
+        result = self.store._collection.get(where=chroma_filter)
         return len(result["ids"] or [])
 
     def delete_by_workspace(self, workspace_id: str) -> None:
         self.store._collection.delete(where={"workspace_id": workspace_id})
 
     def delete_by_source(self, source_type: str, workspace_id: str) -> None:
+        chroma_filter = self._format_chroma_filter({"source_type": source_type, "workspace_id": workspace_id})
         self.store._collection.delete(
-            where={"source_type": source_type, "workspace_id": workspace_id}
+            where=chroma_filter
         )
