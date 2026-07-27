@@ -12,7 +12,8 @@ class GoogleDocsBackfill:
 
     def _api(self, endpoint: str, params: Dict[str, Any] = None) -> Dict[str, Any]:
         headers = {"Authorization": f"Bearer {self.token}"}
-        resp = requests.get(f"{self.base}{endpoint}", headers=headers, params=params)
+        url = endpoint if endpoint.startswith("http://") or endpoint.startswith("https://") else f"{self.base}{endpoint}"
+        resp = requests.get(url, headers=headers, params=params, timeout=30)
         if resp.status_code == 429:
             retry = int(resp.headers.get("Retry-After", 1))
             time.sleep(retry)
@@ -41,7 +42,7 @@ class GoogleDocsBackfill:
 
     def fetch_document_text(self, doc_id: str) -> str:
         """Extract plain text from Google Docs API structured content."""
-        doc = self._api(f"/docs/v1/documents/{doc_id}")
+        doc = self._api(f"https://docs.googleapis.com/v1/documents/{doc_id}")
         body = doc.get("body", {}).get("content", [])
         paragraphs = []
 

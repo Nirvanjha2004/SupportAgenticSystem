@@ -18,6 +18,14 @@ class GoogleDocsConnector(BaseConnector):
         return self.oauth.exchange_code(code)
 
     def backfill(self, credentials: Dict[str, Any], workspace_id: str) -> List[RawDocument]:
+        # Google access tokens expire after ~1h; refresh if we have a refresh_token
+        refresh_token = credentials.get("refresh_token")
+        if refresh_token:
+            try:
+                fresh = self.oauth.refresh_access_token(refresh_token)
+                credentials["access_token"] = fresh["access_token"]
+            except Exception:
+                pass  # Fall through with existing token; backfill will surface the real error per-doc
         token = credentials.get("access_token")
         return GoogleDocsBackfill(token).backfill_workspace(workspace_id)
 
