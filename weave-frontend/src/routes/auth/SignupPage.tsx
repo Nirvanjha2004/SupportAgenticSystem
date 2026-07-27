@@ -102,7 +102,8 @@ export default function SignupPage() {
         },
         'demo-token-12345'
       )
-      navigate('/dashboard')
+      const state = useAppStore.getState()
+      navigate(state.onboardingCompleted ? '/dashboard' : '/onboarding')
     } catch (err) {
       setError('Something went wrong. Please try again.')
     } finally {

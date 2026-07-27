@@ -110,7 +110,7 @@ function ConnectorCard({ connector, status, onClick, disabled }: {
       animate={{ opacity: 1, y: 0 }}
       transition={{ delay: connector.type === 'slack' ? 0 : connector.type === 'google_docs' ? 0.06 : 0.12, duration: 0.3 }}
       onClick={onClick}
-      disabled={disabled || isConnected}
+      disabled={disabled}
       className={`group relative overflow-hidden rounded-xl border border-[#DDD5C8] bg-[#FBF9F5] p-4 text-left transition-all duration-200 ${
         isConnected 
           ? 'border-[#5E6B3F]/30 bg-[#F5F1E8]' 
@@ -158,11 +158,11 @@ function ConnectorCard({ connector, status, onClick, disabled }: {
 }
 
 export default function OnboardingPage() {
-  const [step, setStep] = useState<1 | 2>(1)
-  const [name, setName] = useState('')
-  const navigate = useNavigate()
   const { user, token, onboardingCompleted, completeOnboarding, activeWorkspace, setActiveWorkspace } = useAppStore()
-  const { data: connectors, refetch } = useConnectors()
+  const [step, setStep] = useState<1 | 2>(() => (activeWorkspace ? 2 : 1))
+  const [name, setName] = useState(activeWorkspace?.name || '')
+  const navigate = useNavigate()
+  const { data: connectors, refetch, error: connectorsError } = useConnectors()
 
   const isAuthenticated = user !== null && token !== null
 
@@ -200,11 +200,13 @@ export default function OnboardingPage() {
   }
 
   const handleConnectorClick = (type: string) => {
-    if (!activeWorkspace) {
-      return
+    let wsId = activeWorkspace?.id
+    if (!wsId) {
+      wsId = `ws-${crypto.randomUUID()}`
+      setActiveWorkspace({ id: wsId, name: name.trim() || 'My Workspace' })
     }
 
-    window.location.assign(`http://localhost:8000/connectors/${type}/install?workspace_id=${encodeURIComponent(activeWorkspace.id)}`)
+    window.location.assign(`http://localhost:8000/connectors/${type}/install?workspace_id=${encodeURIComponent(wsId)}`)
   }
 
   if (!isAuthenticated || onboardingCompleted) {
@@ -301,6 +303,11 @@ export default function OnboardingPage() {
                 </p>
 
                 <div className="mt-6 flex flex-col gap-2.5">
+                  {connectorsError && (
+                    <div className="rounded-lg border border-[#A84F3A]/30 bg-[#A84F3A]/5 p-3 text-xs text-[#A84F3A]">
+                      Failed to fetch status: {(connectorsError as Error).message}
+                    </div>
+                  )}
                   {CONNECTORS.map((c) => (
                     <ConnectorCard
                       key={c.type}

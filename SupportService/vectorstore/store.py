@@ -81,11 +81,19 @@ class VectorStore:
         )
         return [doc for doc, score in results if score <= threshold]
 
-    def get_documents(self, query: Optional[str] = None, source_type: Optional[str] = None, k: int = 100) -> List[Dict[str, Any]]:
-        """Get documents, optionally filtered by query and source type."""
+    def get_documents(
+        self,
+        query: Optional[str] = None,
+        source_type: Optional[str] = None,
+        workspace_id: Optional[str] = None,
+        k: int = 100
+    ) -> List[Dict[str, Any]]:
+        """Get documents, optionally filtered by query, source type, and workspace_id."""
         filter_dict: Dict[str, Any] = {}
         if source_type:
             filter_dict["source_type"] = source_type
+        if workspace_id:
+            filter_dict["workspace_id"] = workspace_id
         
         if query:
             docs = self.search(query, k=k, filter_dict=filter_dict if filter_dict else None)
@@ -114,9 +122,12 @@ class VectorStore:
         
         return list(unique_docs.values())
 
-    def count_by_source(self, source_type: str) -> int:
-        """Count number of documents (chunks) for a source type."""
-        result = self.store._collection.get(where={"source_type": source_type})
+    def count_by_source(self, source_type: str, workspace_id: Optional[str] = None) -> int:
+        """Count number of documents (chunks) for a source type, optionally scoped by workspace_id."""
+        where_filter: Dict[str, Any] = {"source_type": source_type}
+        if workspace_id:
+            where_filter["workspace_id"] = workspace_id
+        result = self.store._collection.get(where=where_filter)
         return len(result["ids"] or [])
 
     def delete_by_workspace(self, workspace_id: str) -> None:

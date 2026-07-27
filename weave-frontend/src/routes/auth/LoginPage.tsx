@@ -38,7 +38,8 @@ export default function LoginPage() {
         },
         'demo-token-12345'
       )
-      navigate('/dashboard')
+      const state = useAppStore.getState()
+      navigate(state.onboardingCompleted ? '/dashboard' : '/onboarding')
     } catch {
       setError('Invalid email or password. Please try again.')
     } finally {

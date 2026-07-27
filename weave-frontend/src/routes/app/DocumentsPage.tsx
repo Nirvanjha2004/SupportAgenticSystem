@@ -4,6 +4,7 @@ import DocumentSearchBar from '../../components/documents/DocumentSearchBar'
 import DocumentRow from '../../components/documents/DocumentRow'
 import { FileText, Filter } from 'lucide-react'
 import { apiFetch } from '../../lib/api'
+import { useAppStore } from '../../store/useAppStore'
 
 interface Document {
   title: string
@@ -13,6 +14,7 @@ interface Document {
 }
 
 export default function DocumentsPage() {
+  const activeWorkspace = useAppStore((state) => state.activeWorkspace)
   const [query, setQuery] = useState('')
   const [activeFilter, setActiveFilter] = useState('All')
   const [documents, setDocuments] = useState<Document[]>([])
@@ -33,6 +35,7 @@ export default function DocumentsPage() {
         const params = new URLSearchParams()
         if (query) params.set('q', query)
         if (sourceParam) params.set('source', sourceParam)
+        if (activeWorkspace?.id) params.set('workspace_id', activeWorkspace.id)
         
         const data = await apiFetch(`/documents?${params.toString()}`)
         setDocuments(data || [])
@@ -45,7 +48,7 @@ export default function DocumentsPage() {
     }
 
     fetchDocuments()
-  }, [query, activeFilter])
+  }, [query, activeFilter, activeWorkspace?.id])
 
   return (
     <motion.div

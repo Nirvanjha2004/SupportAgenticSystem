@@ -5,6 +5,8 @@ import MessageBubble from '../../components/ask/MessageBubble'
 import RetrievalStatus from '../../components/ask/RetrievalStatus'
 import { apiFetch } from '../../lib/api'
 
+import { useAppStore } from '../../store/useAppStore'
+
 interface Msg {
   role: 'user' | 'assistant'
   content: string
@@ -14,6 +16,7 @@ interface Msg {
 const SUGGESTIONS = ['How do I reset the DB?', 'Refund policy', 'API keys setup']
 
 export default function AskPage() {
+  const activeWorkspace = useAppStore((state) => state.activeWorkspace)
   const [input, setInput] = useState('')
   const [messages, setMessages] = useState<Msg[]>([])
   const [loading, setLoading] = useState(false)
@@ -39,6 +42,7 @@ export default function AskPage() {
         },
         body: JSON.stringify({
           question: question,
+          workspace_id: activeWorkspace?.id,
           chat_history: messages.map(m => ({ role: m.role, content: m.content })),
           stream: false,
           structured: false,

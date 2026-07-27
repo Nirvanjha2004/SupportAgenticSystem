@@ -1,4 +1,4 @@
-﻿import { useQuery } from '@tanstack/react-query'
+import { useQuery } from '@tanstack/react-query'
 import { apiFetch } from '../lib/api'
 import { useAppStore } from '../store/useAppStore'
 
@@ -28,21 +28,13 @@ export function useConnectors() {
     queryKey: ['connectors', workspaceId],
     queryFn: async () => {
       if (!workspaceId) return []
-      try {
-        const data = await apiFetch(`/connectors?workspace_id=${encodeURIComponent(workspaceId)}`) as ConnectorApiRecord[]
-        // Map snake_case to camelCase
-        return data.map((item) => ({
-          ...item,
-          lastSynced: item.last_synced,
-          docCount: item.doc_count,
-        }))
-      } catch {
-        return [
-          { type: 'slack', name: 'Slack', connected: false, status: 'idle' },
-          { type: 'google_docs', name: 'Google Docs', connected: false, status: 'idle' },
-          { type: 'notion', name: 'Notion', connected: false, status: 'idle' },
-        ] as ConnectorStatus[]
-      }
+      const data = await apiFetch(`/connectors?workspace_id=${encodeURIComponent(workspaceId)}`) as ConnectorApiRecord[]
+      // Map snake_case to camelCase
+      return data.map((item) => ({
+        ...item,
+        lastSynced: item.last_synced,
+        docCount: item.doc_count,
+      }))
     },
     enabled: !!workspaceId,
   })

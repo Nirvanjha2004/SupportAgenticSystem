@@ -92,8 +92,10 @@ def build_rag_chain(
     def _retrieve(inputs: Dict[str, Any]) -> Dict[str, Any]:
         """Fetch docs from Chroma and format context."""
         question = inputs.get("standalone_question") or inputs["question"]
+        workspace_id = inputs.get("workspace_id")
+        filter_dict = {"workspace_id": workspace_id} if workspace_id else None
         # Use score-based search to filter out junk
-        docs = vectorstore.search_with_relevance(query=question, k=5, threshold=0.3)
+        docs = vectorstore.search_with_relevance(query=question, k=5, threshold=0.3, filter_dict=filter_dict)
         context = _format_docs_with_sources(docs)
         return {
             **inputs,

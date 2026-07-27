@@ -106,6 +106,7 @@ async def query(req: QueryRequest):
         # Return structured CitedAnswer
         result = app.state.structured_chain.invoke({
             "question": req.question,
+            "workspace_id": req.workspace_id,
             "chat_history": _parse_history(req.chat_history)
         })
         return QueryResponse(
@@ -115,6 +116,7 @@ async def query(req: QueryRequest):
 
     answer = app.state.rag_chain.invoke({
         "question": req.question,
+        "workspace_id": req.workspace_id,
         "chat_history": _parse_history(req.chat_history)
     })
 
@@ -160,7 +162,7 @@ async def get_connectors(workspace_id: Optional[str] = Query(None)):
     
     response = []
     for conn in connectors_list:
-        doc_count = app.state.vectorstore.count_by_source(conn["type"]) if conn["type"] in connected_sources else 0
+        doc_count = app.state.vectorstore.count_by_source(conn["type"], workspace_id) if conn["type"] in connected_sources else 0
         jobs = app.state.job_queue.get_jobs_by_source(conn["type"], workspace_id)
         latest_job = jobs[0] if jobs else None
         
@@ -191,10 +193,11 @@ async def get_connectors(workspace_id: Optional[str] = Query(None)):
 @app.get("/documents")
 async def get_documents(
     q: Optional[str] = Query(None, description="Search query"),
-    source: Optional[str] = Query(None, description="Filter by source type (slack, google_docs, notion)")
+    source: Optional[str] = Query(None, description="Filter by source type (slack, google_docs, notion)"),
+    workspace_id: Optional[str] = Query(None, description="Workspace ID for multitenant filtering")
 ):
-    """Get list of documents, optionally filtered by query or source."""
-    docs = app.state.vectorstore.get_documents(query=q, source_type=source)
+    """Get list of documents, optionally filtered by query, source, or workspace."""
+    docs = app.state.vectorstore.get_documents(query=q, source_type=source, workspace_id=workspace_id)
     return docs
 
 
