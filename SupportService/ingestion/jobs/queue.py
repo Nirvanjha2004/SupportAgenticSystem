@@ -34,6 +34,7 @@ class JobQueue:
         self._set_job_status(job_id, {
             "id": job_id,
             "source_type": source_type,
+            "workspace_id": workspace_id,
             "stage": "fetching",
             "progress": 0.0,
             "message": "Queued for backfill",
@@ -55,6 +56,7 @@ class JobQueue:
         self._set_job_status(job_id, {
             "id": job_id,
             "source_type": source_type,
+            "workspace_id": workspace_id,
             "stage": "fetching",
             "progress": 0.0,
             "message": "Queued for incremental ingest",
@@ -83,9 +85,11 @@ class JobQueue:
         self.redis.setex(key, 3600, json.dumps(status))  # Expire after 1 hour
     
     def update_job_status(self, job_id: str, stage: str, progress: float, message: str):
+        existing_status = self.get_job_status(job_id)
         self._set_job_status(job_id, {
             "id": job_id,
             "source_type": self._get_job_source_type(job_id) or "unknown",
+            "workspace_id": existing_status.get("workspace_id") if existing_status else None,
             "stage": stage,
             "progress": progress,
             "message": message,
@@ -99,14 +103,23 @@ class JobQueue:
             return json.loads(data).get("source_type")
         return None
     
-    def get_jobs_by_source(self, source_type: str) -> List[Dict[str, Any]]:
+    def get_job_status(self, job_id: str) -> Optional[Dict[str, Any]]:
+        key = f"{self.job_status_prefix}{job_id}".encode()
+        data = self.redis.get(key)
+        if data:
+            return json.loads(data)
+        return None
+
+    def get_jobs_by_source(self, source_type: str, workspace_id: Optional[str] = None) -> List[Dict[str, Any]]:
         keys = self.redis.keys(f"{self.job_status_prefix}*".encode())
         jobs = []
         for key_bytes in keys:
             data = self.redis.get(key_bytes)
             if data:
                 job = json.loads(data)
-                if job.get("source_type") == source_type:
+                if job.get("source_type") == source_type and (
+                    workspace_id is None or job.get("workspace_id") == workspace_id
+                ):
                     jobs.append(job)
         # Sort by timestamp descending
         jobs.sort(key=lambda x: x.get("timestamp", ""), reverse=True)

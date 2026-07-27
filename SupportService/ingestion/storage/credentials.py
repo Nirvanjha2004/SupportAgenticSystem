@@ -31,7 +31,7 @@ class CredentialStore:
     def delete(self, source_type: str, workspace_id: str):
         self.redis.delete(self._key(source_type, workspace_id))
 
-    def list_all(self) -> List[Tuple[str, str]]:
+    def list_all(self, workspace_id: Optional[str] = None) -> List[Tuple[str, str]]:
         """List all (source_type, workspace_id) pairs that have credentials stored."""
         keys = self.redis.keys(b"credentials:*")
         results = []
@@ -39,5 +39,7 @@ class CredentialStore:
             key_str = key_bytes.decode()
             parts = key_str.split(":")
             if len(parts) == 3:
-                results.append((parts[1], parts[2]))
+                source_type, stored_workspace_id = parts[1], parts[2]
+                if workspace_id is None or stored_workspace_id == workspace_id:
+                    results.append((source_type, stored_workspace_id))
         return results

@@ -1,6 +1,5 @@
-from fastapi import APIRouter, HTTPException, Request
+from fastapi import APIRouter, HTTPException, Query
 from fastapi.responses import RedirectResponse
-import secrets
 import requests
 from ingestion.connectors.slack.oauth import SlackOAuth
 from ingestion.connectors.google_docs.oauth import GoogleDocsOAuth
@@ -20,8 +19,8 @@ FRONTEND_URL = "http://localhost:5173"
 # ─── Slack ───────────────────────────────────────────────────────────
 
 @router.get("/connectors/slack/install")
-async def slack_install():
-    state = secrets.token_urlsafe(32)
+async def slack_install(workspace_id: str = Query(...)):
+    state = workspace_id
     url = SlackOAuth().get_authorize_url(state)
     return RedirectResponse(url=url)
 
@@ -32,9 +31,9 @@ async def slack_callback(code: str, state: str):
     except Exception as e:
         raise HTTPException(status_code=400, detail=str(e))
 
-    workspace_id = credentials.get("team_id")
+    workspace_id = state or credentials.get("team_id")
     if not workspace_id:
-        raise HTTPException(status_code=400, detail="Missing team_id")
+        raise HTTPException(status_code=400, detail="Missing workspace_id")
 
     store.save("slack", workspace_id, credentials)
     queue.enqueue_backfill("slack", workspace_id)
@@ -46,8 +45,8 @@ async def slack_callback(code: str, state: str):
 # ─── Google Docs ─────────────────────────────────────────────────────
 
 @router.get("/connectors/google_docs/install")
-async def google_docs_install():
-    state = secrets.token_urlsafe(32)
+async def google_docs_install(workspace_id: str = Query(...)):
+    state = workspace_id
     url = GoogleDocsOAuth().get_authorize_url(state)
     return RedirectResponse(url=url)
 
@@ -58,7 +57,8 @@ async def google_docs_callback(code: str, state: str):
     except Exception as e:
         raise HTTPException(status_code=400, detail=str(e))
 
-    # Fetch user info to get a real workspace identifier
+    # Use onboarding workspace id from OAuth state so connector status is tenant-scoped.
+    workspace_id = state
     access_token = credentials.get("access_token")
     try:
         user_resp = requests.get(
@@ -66,13 +66,13 @@ async def google_docs_callback(code: str, state: str):
             headers={"Authorization": f"Bearer {access_token}"}
         )
         user_resp.raise_for_status()
-        user_info = user_resp.json()
-        workspace_id = user_info.get("email", "unknown-google-user")
-        user_email = user_info.get("email")
+        _ = user_resp.json()
     except Exception as e:
-        # Fallback if userinfo fails
-        workspace_id = credentials.get("refresh_token", "unknown")[:20]
-        user_email = None
+        # Fallback if userinfo fails; keep the app workspace id from OAuth state.
+        pass
+
+    if not workspace_id:
+        raise HTTPException(status_code=400, detail="Missing workspace_id")
 
     store.save("google_docs", workspace_id, credentials)
     queue.enqueue_backfill("google_docs", workspace_id)
@@ -84,8 +84,8 @@ async def google_docs_callback(code: str, state: str):
 # ─── Notion ──────────────────────────────────────────────────────────
 
 @router.get("/connectors/notion/install")
-async def notion_install():
-    state = secrets.token_urlsafe(32)
+async def notion_install(workspace_id: str = Query(...)):
+    state = workspace_id
     url = NotionOAuth().get_authorize_url(state)
     return RedirectResponse(url=url)
 
@@ -96,7 +96,7 @@ async def notion_callback(code: str, state: str):
     except Exception as e:
         raise HTTPException(status_code=400, detail=str(e))
 
-    workspace_id = credentials.get("workspace_id")
+    workspace_id = state or credentials.get("workspace_id")
     if not workspace_id:
         raise HTTPException(status_code=400, detail="Missing workspace_id")
 

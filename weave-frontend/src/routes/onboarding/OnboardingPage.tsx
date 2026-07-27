@@ -161,7 +161,7 @@ export default function OnboardingPage() {
   const [step, setStep] = useState<1 | 2>(1)
   const [name, setName] = useState('')
   const navigate = useNavigate()
-  const { user, token, onboardingCompleted, completeOnboarding } = useAppStore()
+  const { user, token, onboardingCompleted, completeOnboarding, activeWorkspace, setActiveWorkspace } = useAppStore()
   const { data: connectors, refetch } = useConnectors()
 
   const isAuthenticated = user !== null && token !== null
@@ -191,13 +191,20 @@ export default function OnboardingPage() {
   const canContinue = name.trim().length >= 2
 
   const handleCompleteOnboarding = () => {
-    const workspace = { id: 'ws-' + Date.now(), name: name }
-    completeOnboarding(workspace)
+    if (!activeWorkspace) {
+      return
+    }
+
+    completeOnboarding(activeWorkspace)
     navigate('/dashboard')
   }
 
   const handleConnectorClick = (type: string) => {
-    window.location.assign(`http://localhost:8000/connectors/${type}/install`)
+    if (!activeWorkspace) {
+      return
+    }
+
+    window.location.assign(`http://localhost:8000/connectors/${type}/install?workspace_id=${encodeURIComponent(activeWorkspace.id)}`)
   }
 
   if (!isAuthenticated || onboardingCompleted) {
@@ -261,7 +268,10 @@ export default function OnboardingPage() {
 
                 <motion.button
                   disabled={!canContinue}
-                  onClick={() => setStep(2)}
+                  onClick={() => {
+                    setActiveWorkspace({ id: `ws-${crypto.randomUUID()}`, name: name.trim() })
+                    setStep(2)
+                  }}
                   whileHover={canContinue ? { scale: 1.015 } : {}}
                   whileTap={canContinue ? { scale: 0.985 } : {}}
                   className="mt-5 flex w-full items-center justify-center gap-2 rounded-btn bg-[#5E6B3F] px-5 py-2.5 text-sm font-medium text-[#FBF9F5] shadow-soft transition-all duration-300 hover:bg-[#49552F] disabled:cursor-not-allowed disabled:opacity-40"

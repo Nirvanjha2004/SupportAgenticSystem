@@ -39,7 +39,7 @@ export default function LoginPage() {
         'demo-token-12345'
       )
       navigate('/dashboard')
-    } catch (err) {
+    } catch {
       setError('Invalid email or password. Please try again.')
     } finally {
       setLoading(false)

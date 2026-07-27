@@ -144,7 +144,7 @@ async def query_stream(req: QueryRequest):
 # ─── Connectors ───────────────────────────────────────────────────────
 
 @app.get("/connectors", response_model=List[ConnectorStatusResponse])
-async def get_connectors():
+async def get_connectors(workspace_id: Optional[str] = Query(None)):
     """List all connectors and their status."""
     connectors_list = [
         {"type": "slack", "name": "Slack"},
@@ -152,13 +152,16 @@ async def get_connectors():
         {"type": "notion", "name": "Notion"}
     ]
     
-    connected_pairs = app.state.credential_store.list_all()
+    if not workspace_id:
+        return []
+
+    connected_pairs = app.state.credential_store.list_all(workspace_id)
     connected_sources = {src_type for src_type, _ in connected_pairs}
     
     response = []
     for conn in connectors_list:
         doc_count = app.state.vectorstore.count_by_source(conn["type"]) if conn["type"] in connected_sources else 0
-        jobs = app.state.job_queue.get_jobs_by_source(conn["type"])
+        jobs = app.state.job_queue.get_jobs_by_source(conn["type"], workspace_id)
         latest_job = jobs[0] if jobs else None
         
         status = "idle"
@@ -198,9 +201,11 @@ async def get_documents(
 # ─── Sources Jobs ─────────────────────────────────────────────────────
 
 @app.get("/sources/{source_type}/jobs")
-async def get_source_jobs(source_type: str):
+async def get_source_jobs(source_type: str, workspace_id: Optional[str] = Query(None)):
     """Get ingestion jobs for a specific source type."""
-    jobs = app.state.job_queue.get_jobs_by_source(source_type)
+    if not workspace_id:
+        return []
+    jobs = app.state.job_queue.get_jobs_by_source(source_type, workspace_id)
     return jobs
 
 
