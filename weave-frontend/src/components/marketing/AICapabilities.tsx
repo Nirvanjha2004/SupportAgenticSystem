@@ -44,7 +44,7 @@ const containerVariants = {
 
 const cardVariants = {
   hidden: { opacity: 0, y: 16 },
-  visible: { opacity: 1, y: 0, transition: { duration: 0.5, ease: [0.16, 1, 0.3, 1] } },
+  visible: { opacity: 1, y: 0, transition: { duration: 0.5, ease: [0.16, 1, 0.3, 1] as const } },
 }
 
 export default function AICapabilities() {
@@ -78,7 +78,7 @@ export default function AICapabilities() {
           viewport={{ once: true, margin: '-50px' }}
           className="mt-16 grid gap-4 sm:grid-cols-2 lg:grid-cols-3"
         >
-          {CAPABILITIES.map((cap, i) => (
+          {CAPABILITIES.map((cap) => (
             <motion.div
               key={cap.title}
               variants={cardVariants}

@@ -27,7 +27,7 @@ const stepVariants = {
   visible: (i: number) => ({
     opacity: 1,
     x: 0,
-    transition: { duration: 0.6, delay: i * 0.2, ease: [0.16, 1, 0.3, 1] },
+    transition: { duration: 0.6, delay: i * 0.2, ease: [0.16, 1, 0.3, 1] as const },
   }),
 }
 
@@ -42,7 +42,7 @@ export default function HowItWorks() {
           initial={{ opacity: 0, y: 20 }}
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
-          transition={{ duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
+          transition={{ duration: 0.6, ease: [0.16, 1, 0.3, 1] as const }}
           className="max-w-2xl"
         >
           <span className="font-mono text-[9px] font-medium uppercase tracking-[0.15em] text-[#8A857D]">
@@ -67,7 +67,7 @@ export default function HowItWorks() {
               initial={{ height: '0%' }}
               whileInView={{ height: '100%' }}
               viewport={{ once: true }}
-              transition={{ duration: 1.5, delay: 0.3, ease: [0.16, 1, 0.3, 1] }}
+              transition={{ duration: 1.5, delay: 0.3, ease: [0.16, 1, 0.3, 1] as const }}
             />
           </div>
 

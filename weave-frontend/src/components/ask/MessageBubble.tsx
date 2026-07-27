@@ -42,7 +42,7 @@ function SourceModal({ source, onClose }: { source: Source; onClose: () => void 
         initial={{ opacity: 0, y: 16, scale: 0.97 }}
         animate={{ opacity: 1, y: 0, scale: 1 }}
         exit={{ opacity: 0, y: 10, scale: 0.97 }}
-        transition={{ duration: 0.22, ease: [0.16, 1, 0.3, 1] }}
+        transition={{ duration: 0.22, ease: [0.16, 1, 0.3, 1] as const }}
         className="relative w-full max-w-md"
         onClick={(e) => e.stopPropagation()}
       >

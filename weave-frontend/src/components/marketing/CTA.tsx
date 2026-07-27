@@ -1,6 +1,6 @@
 import { Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { ArrowRight, CheckCircle2 } from 'lucide-react';
+import { ArrowRight } from 'lucide-react';
 
 export default function CTA() {
   return (
@@ -36,7 +36,7 @@ export default function CTA() {
           initial={{ opacity: 0, y: 32 }}
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true, margin: '-100px' }}
-          transition={{ duration: 0.8, ease: [0.16, 1, 0.3, 1] }}
+          transition={{ duration: 0.8, ease: [0.16, 1, 0.3, 1] as const }}
           className="mx-auto max-w-4xl text-center"
         >
           <h2 className="font-display text-4xl font-bold tracking-tight text-[#2B2A26] md:text-5xl lg:text-6xl mt-0">

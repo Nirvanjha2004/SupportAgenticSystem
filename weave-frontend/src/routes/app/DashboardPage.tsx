@@ -23,7 +23,7 @@ const containerVariants = {
 
 const itemVariants = {
   hidden: { opacity: 0, y: 16 },
-  visible: { opacity: 1, y: 0, transition: { duration: 0.5, ease: [0.16, 1, 0.3, 1] } },
+  visible: { opacity: 1, y: 0, transition: { duration: 0.5, ease: [0.16, 1, 0.3, 1] as const } },
 }
 
 export default function DashboardPage() {
@@ -146,7 +146,7 @@ export default function DashboardPage() {
                 <motion.div
                   initial={{ height: 0 }}
                   animate={{ height: `${(d.queries / maxQueries) * 100}%` }}
-                  transition={{ duration: 0.6, delay: 0.2, ease: [0.16, 1, 0.3, 1] }}
+                  transition={{ duration: 0.6, delay: 0.2, ease: [0.16, 1, 0.3, 1] as const }}
                   className="w-full rounded-t-md bg-gradient-to-t from-[#5E6B3F] to-[#A8B18A] opacity-80 transition-opacity group-hover:opacity-100"
                 />
                 <span className="mt-2 text-[10px] font-mono text-[#8A857D]">{d.day}</span>

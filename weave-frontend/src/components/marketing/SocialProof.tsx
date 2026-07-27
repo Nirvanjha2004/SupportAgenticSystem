@@ -46,7 +46,7 @@ export default function SocialProof() {
           initial={{ opacity: 0, y: 24 }}
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
-          transition={{ duration: 0.7, delay: 0.15, ease: [0.16, 1, 0.3, 1] }}
+          transition={{ duration: 0.7, delay: 0.15, ease: [0.16, 1, 0.3, 1] as const }}
           className="relative mx-auto mt-24 max-w-3xl"
         >
           <div className="card-sand p-10 md:p-14 relative grain">

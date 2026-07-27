@@ -168,13 +168,15 @@ export default function OnboardingPage() {
 
   // Poll for connector status updates every 2 seconds when on step 2
   useEffect(() => {
-    let interval: NodeJS.Timeout
-    if (step === 2) {
-      interval = setInterval(() => {
-        refetch()
-      }, 2000)
+    if (step !== 2) {
+      return
     }
-    return () => clearInterval(interval)
+
+    const interval = window.setInterval(() => {
+      refetch()
+    }, 2000)
+
+    return () => window.clearInterval(interval)
   }, [step, refetch])
 
   // Redirect if not authenticated or already completed onboarding
@@ -195,7 +197,7 @@ export default function OnboardingPage() {
   }
 
   const handleConnectorClick = (type: string) => {
-    window.location.href = `http://localhost:8000/connectors/${type}/install`
+    window.location.assign(`http://localhost:8000/connectors/${type}/install`)
   }
 
   if (!isAuthenticated || onboardingCompleted) {

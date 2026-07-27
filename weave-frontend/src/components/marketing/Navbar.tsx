@@ -39,7 +39,7 @@ export default function Navbar() {
   return (
     <motion.header
       animate={{ y: hidden ? -100 : 0 }}
-      transition={{ duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
+      transition={{ duration: 0.5, ease: [0.16, 1, 0.3, 1] as const }}
       className={`fixed top-0 left-0 right-0 z-50 transition-all duration-500 ${
         scrolled
           ? 'bg-[#F5F1E8]/85 backdrop-blur-xl shadow-warm border-b border-[#E8E2D8]'
@@ -122,7 +122,7 @@ export default function Navbar() {
             initial={{ opacity: 0, height: 0 }}
             animate={{ opacity: 1, height: 'auto' }}
             exit={{ opacity: 0, height: 0 }}
-            transition={{ duration: 0.4, ease: [0.16, 1, 0.3, 1] }}
+            transition={{ duration: 0.4, ease: [0.16, 1, 0.3, 1] as const }}
             className="overflow-hidden border-t border-[#E8E2D8] bg-[#F5F1E8]/98 backdrop-blur-xl md:hidden"
           >
             <div className="space-y-2 px-6 py-8">

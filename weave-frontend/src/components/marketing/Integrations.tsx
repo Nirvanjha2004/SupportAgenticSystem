@@ -32,7 +32,7 @@ const cardVariants = {
   visible: (i: number) => ({
     opacity: 1,
     y: 0,
-    transition: { duration: 0.5, delay: i * 0.06, ease: [0.16, 1, 0.3, 1] },
+    transition: { duration: 0.5, delay: i * 0.06, ease: [0.16, 1, 0.3, 1] as const },
   }),
 }
 
@@ -47,7 +47,7 @@ export default function Integrations() {
           initial={{ opacity: 0, y: 20 }}
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
-          transition={{ duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
+          transition={{ duration: 0.6, ease: [0.16, 1, 0.3, 1] as const }}
           className="max-w-2xl"
         >
           <span className="font-mono text-[9px] font-medium uppercase tracking-[0.15em] text-[#8A857D]">

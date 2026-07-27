@@ -1,6 +1,6 @@
 import { Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { MessageSquare, FileText, FileSpreadsheet, ArrowRight, Sparkles, Zap } from 'lucide-react';
+import { MessageSquare, FileText, FileSpreadsheet, ArrowRight, Zap } from 'lucide-react';
 
 const TRUST_ITEMS = [
   { label: 'Slack', icon: MessageSquare },
@@ -63,7 +63,7 @@ function HeroVisual() {
       <motion.div
         initial={{ opacity: 0, y: 20, scale: 0.95 }}
         animate={{ opacity: 1, y: 0, scale: 1 }}
-        transition={{ duration: 0.6, delay: 0.3, ease: [0.16, 1, 0.3, 1] }}
+        transition={{ duration: 0.6, delay: 0.3, ease: [0.16, 1, 0.3, 1] as const }}
         className="card-sand overflow-hidden shadow-warm-lg card-premium"
       >
         <div className="p-6 md:p-8">
@@ -75,7 +75,7 @@ function HeroVisual() {
                   key={s.label}
                   initial={{ opacity: 0, x: -8 }}
                   animate={{ opacity: 1, x: 0 }}
-                  transition={{ delay: 0.5 + i * 0.15, duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
+                  transition={{ delay: 0.5 + i * 0.15, duration: 0.5, ease: [0.16, 1, 0.3, 1] as const }}
                   className="flex items-center gap-2.5 rounded-xl border border-[#DDD5C8]/60 bg-[#FBF9F5]/80 px-3.5 py-2.5 hover:border-[#A8B18A]/50 transition-all duration-300 hover:shadow-warm"
                 >
                   <span
@@ -140,7 +140,7 @@ function HeroVisual() {
           <motion.div
             initial={{ opacity: 0, y: 12 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 1, duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
+            transition={{ delay: 1, duration: 0.6, ease: [0.16, 1, 0.3, 1] as const }}
             className="mt-0 rounded-xl border border-[#DDD5C8]/50 bg-gradient-hero p-5"
           >
             <div className="flex items-center gap-2 mb-2">
@@ -186,7 +186,7 @@ const containerVariants = {
 
 const itemVariants = {
   hidden: { opacity: 0, y: 24 },
-  visible: { opacity: 1, y: 0, transition: { duration: 0.7, ease: [0.16, 1, 0.3, 1] } },
+  visible: { opacity: 1, y: 0, transition: { duration: 0.7, ease: [0.16, 1, 0.3, 1] as const } },
 };
 
 export default function Hero() {
@@ -219,7 +219,7 @@ export default function Hero() {
                     className="absolute -bottom-2 left-0 right-0 h-[3px] rounded-full bg-gradient-to-r from-[#5E6B3F] via-[#DCCB9A] to-[#A8B18A]"
                     initial={{ scaleX: 0 }}
                     animate={{ scaleX: 1 }}
-                    transition={{ duration: 0.8, delay: 0.8, ease: [0.16, 1, 0.3, 1] }}
+                    transition={{ duration: 0.8, delay: 0.8, ease: [0.16, 1, 0.3, 1] as const }}
                   />
                 </span>
               </motion.h1>

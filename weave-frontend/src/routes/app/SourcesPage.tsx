@@ -1,7 +1,7 @@
 import { motion } from 'framer-motion'
 import { useConnectors } from '../../hooks/useConnectors'
 import ConnectorCard from '../../components/sources/ConnectorCard'
-import { Plug, CheckCircle, AlertCircle, Clock } from 'lucide-react'
+import { Plug, CheckCircle, Clock } from 'lucide-react'
 
 export default function SourcesPage() {
   const { data: connectors } = useConnectors()
@@ -26,7 +26,7 @@ export default function SourcesPage() {
       className="max-w-5xl space-y-6"
     >
       {/* Editorial header */}
-      <motion.div variants={{ hidden: { opacity: 0, y: 16 }, visible: { opacity: 1, y: 0, transition: { duration: 0.5, ease: [0.16, 1, 0.3, 1] } } }}>
+      <motion.div variants={{ hidden: { opacity: 0, y: 16 }, visible: { opacity: 1, y: 0, transition: { duration: 0.5, ease: [0.16, 1, 0.3, 1] as const } } }}>
         <span className="font-mono text-[9px] font-medium uppercase tracking-[0.15em] text-[#8A857D]">
           Integrations
         </span>

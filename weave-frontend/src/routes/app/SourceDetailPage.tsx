@@ -1,8 +1,7 @@
 import { Link, useParams } from 'react-router-dom'
 import { motion } from 'framer-motion'
 import { useConnectors } from '../../hooks/useConnectors'
-import { useIngestionStatus } from '../../hooks/useIngestionStatus'
-import ConduitPipeline from '../../components/conduit/ConduitPipeline'
+import ConduitHero from '../../components/conduit/ConduitHero'
 import SyncLogTable from '../../components/sources/SyncLogTable'
 import { ArrowLeft } from 'lucide-react'
 
@@ -10,13 +9,6 @@ export default function SourceDetailPage() {
   const { type } = useParams<{ type: string }>()
   const { data: connectors } = useConnectors()
   const conn = connectors?.find((c) => c.type === type)
-  const { data: jobs } = useIngestionStatus(type)
-
-  const activeStage = (() => {
-    if (!jobs || jobs.length === 0) return 0
-    const stageMap: Record<string, number> = { fetching: 0, chunking: 1, embedding: 2, stored: 3 }
-    return stageMap[jobs[0].stage] ?? 0
-  })()
 
   const logs = [
     { time: '14:32:01', message: 'OAuth authorized', status: 'ok' as const },
@@ -58,7 +50,7 @@ export default function SourceDetailPage() {
       {/* Pipeline */}
       <div className="card-sand p-6">
         <h3 className="text-sm font-medium text-[#2B2A26]">Ingestion pipeline</h3>
-        <ConduitPipeline activeStage={activeStage} />
+        <ConduitHero />
       </div>
 
       {/* Sync log */}

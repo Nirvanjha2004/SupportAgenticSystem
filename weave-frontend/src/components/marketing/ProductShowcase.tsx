@@ -125,7 +125,7 @@ export default function ProductShowcase() {
           initial={{ opacity: 0, y: 20 }}
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
-          transition={{ duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
+          transition={{ duration: 0.6, ease: [0.16, 1, 0.3, 1] as const }}
           className="mx-auto max-w-2xl text-center"
         >
           <span className="font-mono text-[9px] font-medium uppercase tracking-[0.15em] text-[#8A857D]">
@@ -145,7 +145,7 @@ export default function ProductShowcase() {
           initial={{ opacity: 0, y: 32 }}
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
-          transition={{ duration: 0.7, delay: 0.1, ease: [0.16, 1, 0.3, 1] }}
+          transition={{ duration: 0.7, delay: 0.1, ease: [0.16, 1, 0.3, 1] as const }}
           className="mt-14"
         >
           <BrowserChrome />

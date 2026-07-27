@@ -11,8 +11,8 @@ const icons: Record<string, string> = {
 }
 
 export default function ConnectorCard({ conn }: { conn: ConnectorStatus }) {
-  const lastSynced = conn.last_synced || conn.lastSynced
-  const docCount = conn.doc_count || conn.docCount
+  const lastSynced = conn.lastSynced
+  const docCount = conn.docCount
 
   return (
     <motion.div

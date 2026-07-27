@@ -122,7 +122,7 @@ export default function AskPage() {
               <motion.div
                 initial={{ opacity: 0, y: 16 }}
                 animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
+                transition={{ duration: 0.5, ease: [0.16, 1, 0.3, 1] as const }}
                 className="text-center"
               >
                 <div className="mx-auto mb-6 flex h-16 w-16 items-center justify-center rounded-2xl bg-[#E2E6D5]">

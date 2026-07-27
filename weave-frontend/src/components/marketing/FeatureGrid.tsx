@@ -38,7 +38,7 @@ const containerVariants = {
 
 const cardVariants = {
   hidden: { opacity: 0, y: 32 },
-  visible: { opacity: 1, y: 0, transition: { duration: 0.7, ease: [0.16, 1, 0.3, 1] } },
+  visible: { opacity: 1, y: 0, transition: { duration: 0.7, ease: [0.16, 1, 0.3, 1] as const } },
 };
 
 export default function FeatureGrid() {
@@ -52,7 +52,7 @@ export default function FeatureGrid() {
           initial={{ opacity: 0, y: 24 }}
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true, margin: '-100px' }}
-          transition={{ duration: 0.7, ease: [0.16, 1, 0.3, 1] }}
+          transition={{ duration: 0.7, ease: [0.16, 1, 0.3, 1] as const }}
           className="max-w-3xl mx-auto text-center mb-16"
         >
           <span className="inline-flex items-center gap-2 rounded-full border border-[#5E6B3F]/20 bg-[#E2E6D5]/50 px-4 py-1.5 mb-6">
